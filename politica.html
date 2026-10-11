@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de privacidad · Mapa Comercial Envigado</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1f2430;background:#f5f6f8;line-height:1.55}
+main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
+h1{font-size:23px;margin:6px 0 4px}h2{font-size:17px;margin:22px 0 6px}
+p,li{font-size:15px}ul{padding-left:20px}
+.card{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:16px}
+.tpl{background:#fef3c7;color:#92400e;border-radius:10px;padding:12px;font-size:14px;margin:12px 0}
+.fill{background:#fde68a;border-radius:4px;padding:0 4px}
+a{color:#0f766e}
+</style>
+</head>
+<body>
+<main>
+<p><a href="index.html">← Volver al mapa</a></p>
+<h1>Política de privacidad y tratamiento de datos</h1>
+<p>Última actualización: <span id="fecha">octubre de 2026</span></p>
+
+<div class="tpl" id="tpl"><b>Plantilla en revisión.</b> Este texto es un borrador general y no constituye asesoría jurídica. Antes de monetizar o ampliar el proyecto, revísalo con un abogado. Completa los datos resaltados en amarillo en el archivo <b>config-contacto.js</b>.</div>
+
+<div class="card">
+<h2>1. Responsable del tratamiento</h2>
+<p>El responsable del tratamiento de los datos de este sitio es <b id="resp"></b>, en Envigado (Antioquia, Colombia). Contacto para consultas, correcciones y retiros: <b id="mail"></b>.</p>
+
+<h2>2. Qué es este sitio</h2>
+<p>Mapa Comercial Envigado es un directorio de negocios del centro de Envigado. Muestra información comercial de los establecimientos para que las personas los encuentren y los contacten.</p>
+
+<h2>3. Qué datos tratamos</h2>
+<ul>
+<li><b>Datos comerciales de los negocios:</b> nombre, categoría, dirección, coordenadas del local, horario, teléfono o WhatsApp comercial y enlaces públicos del negocio.</li>
+<li><b>Avisos enviados por usuarios:</b> cuando alguien avisa de un negocio, recibimos la ubicación que marcó o que tomó con el GPS de su celular, y el nombre, categoría, dirección y teléfono del negocio que haya escrito. No pedimos tu nombre ni tu correo para avisar.</li>
+<li><b>Tu ubicación al usar «Cerca de mí»:</b> se usa únicamente en tu navegador para ordenar los negocios por distancia y no se envía a nuestros servidores.</li>
+<li><b>En tu navegador:</b> guardamos un pequeño contador local para limitar la cantidad de avisos por día.</li>
+</ul>
+<p>Actualmente el sitio no usa cookies de seguimiento ni herramientas de analítica. Si se incorporan, se actualizará esta política.</p>
+
+<h2>4. De dónde obtenemos la información de los negocios</h2>
+<ul>
+<li>Visitas al establecimiento.</li>
+<li>Canales públicos del propio negocio (sitio web, redes sociales).</li>
+<li>Confirmación o autorización de su titular.</li>
+<li>Avisos de la comunidad, que se revisan antes de publicarse.</li>
+<li>Datos abiertos de OpenStreetMap, © colaboradores de OpenStreetMap (licencia ODbL).</li>
+</ul>
+<p>Publicamos únicamente canales de contacto comerciales. No publicamos teléfonos personales sin autorización de su titular.</p>
+
+<h2>5. Para qué usamos los datos</h2>
+<ul>
+<li>Mostrar los negocios en el mapa y facilitar que las personas los encuentren y los contacten.</li>
+<li>Verificar y mantener actualizada la información.</li>
+<li>Responder solicitudes de corrección o retiro.</li>
+</ul>
+
+<h2>6. Servicios de terceros</h2>
+<ul>
+<li><b>OpenStreetMap:</b> el mapa se carga desde sus servidores, que pueden recibir tu dirección IP.</li>
+<li><b>GitHub Pages:</b> aloja este sitio.</li>
+<li><b>Google Forms:</b> recibe los avisos que envían los usuarios.</li>
+<li><b>Google Maps:</b> el botón «Cómo llegar» abre Google Maps en una pestaña nueva, con sus propias condiciones de privacidad.</li>
+</ul>
+
+<h2>7. Tus derechos</h2>
+<p>Conforme a la Ley 1581 de 2012 y las normas que la reglamentan, el titular de los datos puede conocer, actualizar y rectificar su información, solicitar la supresión de sus datos o revocar la autorización cuando proceda, y presentar quejas ante la Superintendencia de Industria y Comercio.</p>
+
+<h2>8. Cómo corregir o retirar un negocio</h2>
+<p>Si eres titular o representante de un negocio y quieres corregir, actualizar o retirar su ficha, escribe a <b id="mail2"></b> indicando el nombre del negocio y lo que necesitas. También puedes usar el enlace «Corregir o retirar mi negocio» al pie del mapa o el botón «Reportar error» de cada ficha. Atenderemos la solicitud dentro de los plazos legales.</p>
+
+<h2>9. Conservación</h2>
+<p>Conservamos la información de un negocio mientras siga siendo útil para el directorio o hasta que su titular solicite el retiro.</p>
+
+<h2>10. Cambios</h2>
+<p>Podemos actualizar esta política. La versión vigente es la publicada en esta página.</p>
+</div>
+</main>
+<script src="config-contacto.js"></script>
+<script>
+(function(){
+  var c=(typeof CONTACTO!=="undefined"&&CONTACTO)||{};
+  function put(id,v,ph){var e=document.getElementById(id);if(!e)return;if(v){e.textContent=v}else{e.textContent=ph;e.className="fill"}}
+  put("resp",c.responsable,"[NOMBRE O RAZÓN SOCIAL]");
+  put("mail",c.correo,"[CORREO DE CONTACTO]");
+  put("mail2",c.correo,"[CORREO DE CONTACTO]");
+  if(c.responsable&&c.correo){var t=document.getElementById("tpl");if(t)t.querySelector("b").textContent="Borrador en revisión."}
+})();
+</script>
+</body>
+</html>
