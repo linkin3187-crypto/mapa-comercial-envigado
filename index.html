@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa Comercial Envigado</title>
+<title>Mapa Comercial Envigado · Negocios de tu barrio</title>
+<meta name="description" content="Encuentra tiendas de barrio, ferreterías, farmacias, restaurantes y oficios cerca de ti en Envigado y el Valle de Aburrá. Mapa gratis con horarios y cómo llegar.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mapa Comercial · Negocios de tu barrio">
+<meta property="og:description" content="¿Dónde queda una tienda, ferretería, llantería o costurera cerca de ti? Mira el mapa.">
+<meta property="og:image" content="https://linkin3187-crypto.github.io/mapa-comercial-envigado/og-image.png">
+<meta property="og:url" content="https://linkin3187-crypto.github.io/mapa-comercial-envigado/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📍%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -20,13 +29,16 @@ input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1
 #chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
 .chip{flex:0 0 auto;padding:7px 12px;border:1px solid #cbd1d9;border-radius:999px;background:#fff;font-size:14px;cursor:pointer;white-space:nowrap}
 .chip.on{background:#0f766e;border-color:#0f766e;color:#fff}
+#tools{display:flex;gap:6px;align-items:center;overflow-x:auto;margin-top:6px;padding-bottom:2px}
+#tools select{flex:0 0 auto;display:none;padding:7px 10px;font-size:14px;border:1px solid #cbd1d9;border-radius:8px;background:#fff}
+#vcount{display:none;flex:0 0 auto;font-size:13px;color:#0f766e;font-weight:600}
 #msg{display:none;padding:10px 14px;background:#e0f2fe;font-size:14px;position:sticky;top:0;z-index:1300}
 #mapwrap{position:relative}
 #map{height:62vh;min-height:360px;width:100%}#map.picking{cursor:crosshair}
 #fit{position:absolute;top:10px;right:10px;z-index:1000;padding:9px 12px;border:0;border-radius:8px;background:#fff;box-shadow:0 1px 5px #0004;font-size:13px;cursor:pointer}
 .pin{width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px #0006;display:flex;align-items:center;justify-content:center}
 .pin span{transform:rotate(45deg);font-size:16px;line-height:1}
-#sheet{display:none;position:absolute;left:8px;right:8px;bottom:8px;z-index:1100;max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 18px #0005}
+#sheet{display:none;position:absolute;left:8px;right:8px;bottom:8px;z-index:1100;max-width:520px;max-height:75%;overflow-y:auto;margin:0 auto;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 18px #0005}
 #sheet h3{margin:0 24px 4px 0;font-size:18px}#sheet p{margin:3px 0;font-size:14px;color:#475467}
 #sx{position:absolute;top:8px;right:10px;border:0;background:none;font-size:22px;cursor:pointer;color:#667085}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
@@ -36,53 +48,45 @@ input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1
 #results h2{margin:0 0 4px;font-size:18px}#cnt{font-size:13px;color:#667085;margin:0 0 8px}
 .business{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:13px;margin-bottom:10px}
 .business h3{margin:0 0 3px;font-size:16px}.business p{margin:2px 0;font-size:14px;color:#475467}
-.badge{display:inline-block;margin-top:5px;padding:3px 8px;border-radius:5px;background:#fef3c7;color:#92400e;font-size:12px}
-.badge.ok{background:#e6f4f1;color:#0f766e}
+.badge{display:inline-block;margin:5px 4px 0 0;padding:3px 8px;border-radius:5px;background:#fef3c7;color:#92400e;font-size:12px}
+.badge.ok{background:#e6f4f1;color:#0f766e}.badge.old{background:#fee2e2;color:#991b1b}
+.badge.open{background:#dcfce7;color:#166534}.badge.closed{background:#fee2e2;color:#991b1b}.badge.tag{background:#eef2ff;color:#3730a3}
+.dist{color:#0f766e!important;font-weight:600}
 #more{width:100%;padding:12px;border:1px solid #0f766e;background:#fff;color:#0f766e;border-radius:10px;font-size:15px;cursor:pointer}
-#export{display:none;margin-top:16px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px}
-#export h3{margin:0 0 6px;font-size:16px}#export ol{padding-left:20px;font-size:14px;margin:6px 0}
-textarea{width:100%;height:150px;font-size:13px}
-footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{color:#667085}
-#modal{display:none;position:fixed;inset:0;z-index:2000;background:#0008;overflow-y:auto;padding:12px}
-#form{background:#fff;max-width:520px;margin:10px auto 40px;border-radius:14px;padding:16px}
-#form h3{margin:0 0 4px;font-size:18px}
+#empty{text-align:center;padding:18px 8px;color:#475467}
+#export,#avcfg{display:none;margin-top:16px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px}
+#export h3,#avcfg h3{margin:0 0 6px;font-size:16px}#export ol,#avcfg ol{padding-left:20px;font-size:14px;margin:6px 0}
+textarea{width:100%;height:150px;font-size:13px}#avcfg textarea{height:90px;margin-top:6px}
+footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{color:#667085;margin:0 3px}
+.hint{font-size:12px;color:#667085;margin:3px 0 0}
+/* ventanas */
+#modal,#vmodal,#aviso{display:none;position:fixed;inset:0;background:#0008;overflow-y:auto;padding:12px}
+#modal{z-index:2000}#vmodal{z-index:2400}#aviso{z-index:2500}
+#form,#vbox,#avbox{position:relative;background:#fff;max-width:520px;margin:10px auto 40px;border-radius:14px;padding:16px}
+#vbox{margin-top:50px;max-width:420px}
+#form h3,#vbox h3,#avbox h3{margin:0 28px 2px 0;font-size:18px}
 #form label{display:block;font-size:13px;color:#475467;margin-top:10px}
-#form input[type=text]{width:100%;padding:10px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px}
+#form input[type=text],#form select,#avbox input[type=text]{width:100%;padding:10px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px;background:#fff}
 #form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #form .chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px;color:#1f2430}
-.hint{font-size:12px;color:#667085;margin:3px 0 0}
-#avbtn{margin-top:10px;display:none;font-size:15px;padding:11px 16px}
-#aviso{display:none;position:fixed;inset:0;z-index:2500;background:#0008;overflow-y:auto;padding:12px}
-#avbox{position:relative;background:#fff;max-width:520px;margin:10px auto 40px;border-radius:14px;padding:16px}
+.hr{display:grid;grid-template-columns:70px 1fr 1fr;gap:6px;align-items:center;margin-top:6px;font-size:14px}
+.hr input[type=time]{padding:8px;font-size:15px;border:1px solid #cbd1d9;border-radius:8px;width:100%}
+#vbtns{flex-direction:column}#vbtns .btn{width:100%;padding:13px;font-size:16px;text-align:left}
 #avx{position:absolute;top:8px;right:12px;border:0;background:none;font-size:26px;cursor:pointer;color:#667085}
-#avbox h3{margin:0 28px 2px 0;font-size:19px}
 .step{margin-top:14px}.step>b{display:block;margin-bottom:6px}
 #amap{height:230px;width:100%;margin-top:8px;border-radius:10px;border:1px solid #cbd1d9}
-#avbox input[type=text]{width:100%;padding:11px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px;margin-bottom:6px}
-#avcats{display:flex;flex-wrap:wrap;gap:6px}
-#avcats .chip{font-size:15px}
+#avbox input[type=text]{margin-bottom:6px}
+#avcats{display:flex;flex-wrap:wrap;gap:6px}#avcats .chip{font-size:15px}
 #av-web{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 #averr{color:#b91c1c;font-size:14px;margin-top:8px;min-height:18px}
 #avok{text-align:center;padding:20px 6px}#avok h3{margin:8px 0}
-#avcfg{display:none;margin-top:16px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px}
-#avcfg h3{margin:0 0 6px;font-size:16px}#avcfg ol{padding-left:20px;font-size:14px;margin:6px 0}
-#avcfg textarea{height:90px;margin-top:6px}
-#form select{width:100%;padding:10px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px;background:#fff}
-.badge.old{background:#fee2e2;color:#991b1b;margin-left:4px}
-.dist{color:#0f766e!important;font-weight:600}
-#tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
-#vfilter{display:none;padding:7px 10px;font-size:14px;border:1px solid #cbd1d9;border-radius:8px;background:#fff}
-#vcount{display:none;font-size:13px;color:#0f766e;font-weight:600}
-#vmodal{display:none;position:fixed;inset:0;z-index:2400;background:#0008;padding:12px;overflow-y:auto}
-#vbox{background:#fff;max-width:420px;margin:50px auto;border-radius:14px;padding:16px}
-#vbox h3{margin:0 0 4px;font-size:18px}
-#vbtns{flex-direction:column}#vbtns .btn{width:100%;padding:13px;font-size:16px;text-align:left}
-footer a{margin:0 3px}
+#avbtn{margin-top:10px;display:none;font-size:15px;padding:11px 16px}
 </style>
 </head>
 <body>
-<header><h1>Mapa Comercial Envigado</h1><p>Descubre los negocios del centro de Envigado.</p>
+<header><h1>Mapa Comercial Envigado</h1><p>Tiendas, comida, farmacias, ferreterías y oficios cerca de ti.</p>
   <button class="btn" id="avbtn" type="button">➕ Avisar de un negocio</button></header>
+<noscript><p style="padding:14px">Esta página necesita JavaScript para mostrar el mapa de negocios del barrio: tiendas, ferreterías, farmacias, restaurantes y oficios en Envigado y el Valle de Aburrá.</p></noscript>
 
 <div id="ebar">
   <b>✏️ Modo editor.</b> Los cambios se guardan solo en este navegador hasta que exportes y los pegues en GitHub.
@@ -93,10 +97,14 @@ footer a{margin:0 3px}
 </div>
 
 <div class="top">
-  <input id="search" type="search" placeholder="Buscar por nombre o dirección…" aria-label="Buscar un negocio">
+  <input id="search" type="search" placeholder="¿Qué buscas? Ej: llantas, arreglar ruedo, tornillos…" aria-label="Buscar un negocio o servicio">
   <div id="chips" role="group" aria-label="Filtrar por categoría"></div>
   <div id="tools">
     <button class="chip" id="near" type="button">📍 Cerca de mí</button>
+    <button class="chip" id="fopen" type="button">🟢 Abierto ahora</button>
+    <button class="chip" id="fsun" type="button">☀️ Abre domingo</button>
+    <button class="chip" id="fwho" type="button">📦 Mayoristas</button>
+    <select id="muni" aria-label="Municipio"><option value="">Todos los municipios</option></select>
     <select id="vfilter" aria-label="Filtro de verificación">
       <option value="">Todos</option><option value="pend">Pendientes de verificar</option><option value="ver">Verificados</option><option value="old">Verificación antigua</option><option value="noloc">Sin ubicación</option>
     </select>
@@ -125,21 +133,21 @@ footer a{margin:0 3px}
     <textarea id="exp" readonly></textarea>
     <div class="btns"><button class="btn" id="ecopy" type="button">Copiar negocios.js</button><button class="btn r" id="eclear" type="button">Borrar cambios locales</button></div>
   </div>
+  <div id="avcfg">
+    <h3>Configurar avisos (una sola vez)</h3>
+    <ol>
+      <li>Crea un Google Form con 8 preguntas de <b>respuesta corta</b>, en este orden: nombre, categoria, direccion, telefono, lat, lng, precision, metodo.</li>
+      <li>Menú ⋮ → <b>Completar previamente el formulario</b>. En cada pregunta escribe su propio nombre como respuesta y copia el enlace.</li>
+      <li>Pégalo aquí:</li>
+    </ol>
+    <textarea id="avlink" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123=nombre&..."></textarea>
+    <div class="btns"><button class="btn" id="avgen" type="button">Generar configuración</button></div>
+    <textarea id="avout" readonly placeholder="Aquí aparecerá el texto para config-avisos.js"></textarea>
+    <p class="hint">Copia ese texto, abre <b>config-avisos.js</b> en GitHub (lápiz), reemplaza todo y haz Commit.</p>
+  </div>
 </section>
 
-<div id="avcfg" style="margin:16px auto;max-width:900px">
-  <h3>Configurar avisos (una sola vez)</h3>
-  <ol>
-    <li>Crea un Google Form con 8 preguntas de <b>respuesta corta</b>, en este orden: nombre, categoria, direccion, telefono, lat, lng, precision, metodo.</li>
-    <li>Menú ⋮ → <b>Obtener enlace prefabricado</b>. En cada pregunta escribe su propio nombre como respuesta (en la de «nombre» escribe nombre, etc.) y copia el enlace.</li>
-    <li>Pégalo aquí:</li>
-  </ol>
-  <textarea id="avlink" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123=nombre&..."></textarea>
-  <div class="btns"><button class="btn" id="avgen" type="button">Generar configuración</button></div>
-  <textarea id="avout" readonly placeholder="Aquí aparecerá el texto para config-avisos.js"></textarea>
-  <p class="hint">Copia ese texto, abre <b>config-avisos.js</b> en GitHub (lápiz), reemplaza todo y haz Commit.</p>
-</div>
-
+<!-- Aviso rápido -->
 <div id="aviso"><div id="avbox">
   <button id="avx" type="button" aria-label="Cerrar">×</button>
   <div id="avform">
@@ -151,11 +159,12 @@ footer a{margin:0 3px}
       <div id="amap"></div>
       <p class="hint">Si el punto no está sobre el negocio, arrástralo o toca el mapa para moverlo.</p>
     </div>
-    <div class="step"><b>2. ¿Cómo se llama?</b><input type="text" id="av-nombre" maxlength="80" placeholder="Nombre del negocio" autocomplete="off"></div>
+    <div class="step"><b>2. ¿Cómo se llama?</b><input type="text" id="av-nombre" maxlength="80" placeholder="Nombre del negocio o servicio" autocomplete="off"></div>
     <div class="step"><b>3. ¿Qué tipo de negocio es?</b><div id="avcats"></div></div>
     <div class="step"><b>4. Opcional</b>
       <input type="text" id="av-direccion" maxlength="120" placeholder="Dirección (ej. Calle 38 Sur # 42-10)" autocomplete="off">
       <input type="text" id="av-telefono" maxlength="20" inputmode="tel" placeholder="Teléfono del negocio" autocomplete="off">
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:14px;margin-top:6px"><input type="checkbox" id="av-casa" style="margin-top:3px"> Funciona desde una casa (no mostraremos la dirección exacta)</label>
     </div>
     <input type="text" id="av-web" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div id="averr" role="alert"></div>
@@ -167,27 +176,46 @@ footer a{margin:0 3px}
     <div class="btns" style="justify-content:center"><button class="btn" id="avmore" type="button">Avisar de otro</button><button class="btn o" id="avclose" type="button">Cerrar</button></div></div>
 </div></div>
 
+<!-- Verificación rápida -->
 <div id="vmodal"><div id="vbox">
   <h3>Verificar «<span id="vname"></span>»</h3>
   <p class="hint">¿Cómo lo verificaste hoy? Se guarda con la fecha de hoy.</p>
   <div class="btns" id="vbtns"></div>
-  <label class="chk" style="display:flex;gap:8px;margin-top:12px;font-size:14px"><input type="checkbox" id="vperm"> El teléfono es un canal comercial público o el dueño autorizó publicarlo</label>
+  <label style="display:flex;gap:8px;margin-top:12px;font-size:14px"><input type="checkbox" id="vperm"> El teléfono es un canal comercial público o el dueño autorizó publicarlo</label>
   <div class="btns"><button class="btn o" id="vcancel" type="button">Cancelar</button></div>
 </div></div>
 
+<!-- Editor -->
 <div id="modal"><div id="form">
   <h3 id="ftitle">Editar negocio</h3><p class="hint" id="fid"></p>
   <label>Nombre del negocio *<input type="text" id="f-nombre" autocomplete="off"></label>
   <label>Categoría<input type="text" id="f-categoria" list="cats" autocomplete="off"></label>
   <datalist id="cats"></datalist>
+  <div class="two">
+    <label>Tipo de negocio<select id="f-tipo"><option value="">Local físico</option><option>Desde casa</option><option>Se desplaza al cliente</option><option>Solo en línea</option></select></label>
+    <label>Vende<select id="f-canal"><option value="">—</option><option>Minorista</option><option>Mayorista</option><option>Ambos</option></select></label>
+  </div>
+  <p class="hint">«Desde casa» y «Se desplaza»: no pongas la dirección exacta (usa el barrio). La ubicación se redondea a ~100 m. «Solo en línea» no lleva punto en el mapa.</p>
   <label>Dirección<input type="text" id="f-direccion" placeholder="Calle 38 Sur # 42-10" autocomplete="off"></label>
+  <div class="two">
+    <label>Barrio<input type="text" id="f-barrio" autocomplete="off"></label>
+    <label>Municipio<input type="text" id="f-municipio" placeholder="Envigado" autocomplete="off"></label>
+  </div>
   <div class="two">
     <label>Teléfono<input type="text" id="f-telefono" inputmode="tel" placeholder="604 000 0000" autocomplete="off"></label>
     <label>WhatsApp<input type="text" id="f-whatsapp" inputmode="tel" placeholder="300 123 4567" autocomplete="off"></label>
   </div>
-  <p class="hint">WhatsApp: celular de 10 dígitos que empiece por 3. Si lo dejas vacío, se usa el teléfono cuando sea celular.</p>
-  <label>Horario<input type="text" id="f-horario" placeholder="Lun-Sáb 8am-6pm" autocomplete="off"></label>
-  <div class="two">
+  <p class="hint">WhatsApp: celular de 10 dígitos que empiece por 3. Si lo dejas vacío, se usa el teléfono cuando es celular.</p>
+  <label>Palabras que la gente usa para buscarlo<input type="text" id="f-palabras_clave" placeholder="llantas, pinchazo, montallantas" autocomplete="off"></label>
+  <label style="margin-top:14px"><b>Horario por día</b></label>
+  <div id="hgrid"></div>
+  <div class="btns" style="margin-top:6px">
+    <button class="btn o" type="button" data-copy="LV">Lun → Vie</button>
+    <button class="btn o" type="button" data-copy="LS">Lun → Sáb</button>
+    <button class="btn o" type="button" data-copy="LD">Lun → todos</button>
+  </div>
+  <label>Nota de horario (opcional)<input type="text" id="f-horario" placeholder="Cierra 12-2 pm para almuerzo" autocomplete="off"></label>
+  <div class="two" style="margin-top:4px">
     <label>Latitud<input type="text" id="f-lat" inputmode="decimal" placeholder="6.1738" autocomplete="off"></label>
     <label>Longitud<input type="text" id="f-lng" inputmode="decimal" placeholder="-75.5861" autocomplete="off"></label>
   </div>
@@ -217,18 +245,49 @@ footer a{margin:0 3px}
 <script src="config-contacto.js"></script>
 <script>
 const EDITOR=/[?&]editar/.test(location.search);
-const ICON={"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Bar":["🍺","#7c3aed"],"Café":["☕","#92400e"],"Calzado":["👟","#2563eb"],"Ropa":["👕","#db2777"],"Mercería":["🧵","#c026d3"],"Servicios financieros":["🏦","#0369a1"],"Salud":["🩺","#0d9488"],"Belleza":["💇","#e11d48"],"Tecnología":["📱","#4f46e5"],"Supermercado":["🛒","#65a30d"],"Tienda":["🏪","#ca8a04"],"Panadería":["🥖","#b45309"],"Papelería":["✏️","#0891b2"],"Librería":["📚","#7e22ce"],"Carnicería":["🥩","#b91c1c"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Ferretería":["🔧","#475569"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"]};
+const ICON={"Tienda de barrio":["🏪","#ca8a04"],"Tienda":["🏪","#ca8a04"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Panadería":["🥖","#b45309"],"Café":["☕","#92400e"],"Bar":["🍺","#7c3aed"],"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Ferretería":["🔧","#475569"],"Llantería":["🛞","#334155"],"Costurera":["🧵","#c026d3"],"Mercería":["🧵","#c026d3"],"Carpintería":["🪚","#a16207"],"Mecánica":["🛠️","#1d4ed8"],"Peluquería":["💇","#e11d48"],"Belleza":["💇","#e11d48"],"Papelería":["✏️","#0891b2"],"Fruver":["🍎","#65a30d"],"Carnicería":["🥩","#b91c1c"],"Ropa":["👕","#db2777"],"Calzado":["👟","#2563eb"],"Tecnología":["📱","#4f46e5"],"Salud":["🩺","#0d9488"],"Servicios financieros":["🏦","#0369a1"],"Supermercado":["🛒","#65a30d"],"Librería":["📚","#7e22ce"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"],"Electricista":["💡","#ca8a04"],"Plomero":["🚰","#0284c7"],"Cerrajería":["🔑","#6b7280"],"Tapicería":["🛋️","#9a3412"],"Zapatería":["👞","#78350f"],"Lavandería":["🧺","#0ea5e9"]};
 const iconOf=c=>ICON[c]||["📍","#475569"];
+const CATSYN={"Tienda de barrio":"abarrotes mercado huevos leche gaseosa hielo mecato granos miscelanea","Tienda":"abarrotes mercado huevos leche gaseosa hielo mecato miscelanea","Farmacia":"medicinas drogueria pastillas remedios","Droguería":"medicinas farmacia pastillas remedios","Ferretería":"tornillos clavos herramientas cemento pintura tuberia bombillos cerraduras","Llantería":"llantas neumaticos pinchazo montallantas vulcanizadora rines","Costurera":"arreglos ruedo modista confeccion cremallera costura sastre dobladillo","Mercería":"hilos botones cierres agujas telas costura","Carpintería":"madera muebles puertas closet ebanista cocina integral","Mecánica":"taller carro moto aceite frenos revision tecnomecanica","Peluquería":"corte cabello barberia unas peinado","Belleza":"peluqueria unas spa maquillaje","Panadería":"pan pasteleria tortas pandebono","Papelería":"cuadernos fotocopias impresiones utiles cartulina","Fruver":"frutas verduras plaza","Carnicería":"carne pollo cerdo res","Restaurante":"almuerzo comida corrientazo cena menu","Comida rápida":"hamburguesa pizza perro salchipapa empanadas","Café":"cafe tinto postres desayuno","Tecnología":"celulares computador reparacion pantallas","Servicios financieros":"banco cajero corresponsal","Electricista":"luz cables instalaciones","Plomero":"tuberias fugas agua destape","Cerrajería":"llaves cerraduras","Zapatería":"remontadora arreglo zapatos","Lavandería":"ropa lavado tintoreria"};
 const $=id=>document.getElementById(id);
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const has=n=>Number.isFinite(n.lat)&&Number.isFinite(n.lng);
+const approx=n=>n.tipo==="Desde casa"||n.tipo==="Se desplaza al cliente";
+const needsLoc=t=>t!=="Solo en línea"&&t!=="Se desplaza al cliente";
+
+// ---- Horarios ----
+const DK=["L","M","X","J","V","S","D"],DN=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],DJ={L:1,M:2,X:3,J:4,V:5,S:6,D:0};
+function parseHoras(s){const r={};DK.forEach(k=>r[k]=null);
+  String(s||"").split("|").forEach(p=>{const m=p.trim().match(/^([LMXJVSD]) (\d{2}):(\d{2})-(\d{2}):(\d{2})$/);if(m)r[m[1]]=[+m[2]*60+ +m[3],+m[4]*60+ +m[5]]});
+  return r}
+const fmtT=m=>{const h=Math.floor(m/60)%24,mm=m%60;return ((h%12)||12)+(mm?":"+String(mm).padStart(2,"0"):"")+(h<12?" am":" pm")};
+const dayKey=d=>DK.find(k=>DJ[k]===d);
+function openInfo(n,now){
+  const H=parseHoras(n.horas);if(!DK.some(k=>H[k]))return null;
+  now=now||new Date();const dow=now.getDay(),min=now.getHours()*60+now.getMinutes();
+  const t=H[dayKey(dow)],y=H[dayKey((dow+6)%7)];
+  if(t){let o=t[0],c=t[1];if(o===0&&c>=1439)return{open:true,all:true};if(c<=o)c+=1440;if(min>=o&&min<c)return{open:true,until:c%1440}}
+  if(y){const o=y[0],c=y[1];if(c<=o&&min<c)return{open:true,until:c}}
+  for(let i=0;i<8;i++){const d=(dow+i)%7,x=H[dayKey(d)];if(x&&(i>0||min<x[0]))return{open:false,next:x[0],inDays:i,day:d}}
+  return{open:false}}
+function openBadge(n){const o=openInfo(n);if(!o)return "";
+  if(o.open)return `<span class="badge open">🟢 ${o.all?"Abierto 24 horas":"Abierto ahora · cierra "+fmtT(o.until)}</span>`;
+  if(o.next==null)return `<span class="badge closed">🔴 Cerrado ahora</span>`;
+  const when=o.inDays===0?"hoy":o.inDays===1?"mañana":DN[DK.indexOf(dayKey(o.day))];
+  return `<span class="badge closed">🔴 Cerrado · abre ${when} ${fmtT(o.next)}</span>`}
+function horasTexto(n){const H=parseHoras(n.horas);if(!DK.some(k=>H[k]))return "";
+  const lab=k=>H[k]?(H[k][0]===0&&H[k][1]>=1439?"24 horas":fmtT(H[k][0])+"–"+fmtT(H[k][1]%1440||1440)):"cerrado";
+  const runs=[];DK.forEach((k,i)=>{const l=lab(k),last=runs[runs.length-1];if(last&&last.l===l)last.e=i;else runs.push({s:i,e:i,l})});
+  return runs.map(r=>(r.s===r.e?DN[r.s]:DN[r.s]+"–"+DN[r.e])+" "+r.l).join(" · ")}
+const sunOpen=n=>{const H=parseHoras(n.horas);return !!H.D};
+
+// ---- Verificación y contacto ----
 const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const dparts=s=>String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
 const fmtD=s=>{const m=dparts(s);return m?(+m[3])+" "+MES[+m[2]-1]+" "+m[1]:""};
 const ageDays=s=>{const m=dparts(s);return m?Math.floor((Date.now()-new Date(+m[1],+m[2]-1,+m[3]))/864e5):null};
 const vOld=n=>n.verificado&&ageDays(n.fecha_verif)!=null&&ageDays(n.fecha_verif)>180;
-const estadoDe=n=>n.verificado?("Verificado"+(n.fecha_verif?" el "+fmtD(n.fecha_verif):"")+(n.metodo_verif?" · "+n.metodo_verif:"")):(has(n)?"Ubicado, sin verificar":"Pendiente de ubicación");
+const estadoDe=n=>n.verificado?("Verificado"+(n.fecha_verif?" el "+fmtD(n.fecha_verif):"")+(n.metodo_verif?" · "+n.metodo_verif:"")):(has(n)?(approx(n)?"Ubicación aproximada, sin verificar":"Ubicado, sin verificar"):(needsLoc(n.tipo)?"Pendiente de ubicación":"Sin ubicación fija"));
 const CT=(typeof CONTACTO!=="undefined"&&CONTACTO)||{correo:"",responsable:""};
 const mailFix=n=>"mailto:"+encodeURIComponent(CT.correo)+"?subject="+encodeURIComponent("Corregir o retirar negocio "+n.id)+"&body="+encodeURIComponent("Negocio: "+n.nombre+" ("+n.id+")\nQuiero: corregir / retirar (borra lo que no aplique)\nDetalle:\n");
 const fmtM=m=>m<1000?"~"+(Math.max(10,Math.round(m/10)*10))+" m":(m/1000).toFixed(1).replace(".",",")+" km";
@@ -251,6 +310,12 @@ const waFrom=t=>{const d=firstPhone(t).replace(/\D/g,"");
   return "";};
 const waNumber=n=>waFrom(n.whatsapp)||waFrom(n.telefono);
 const dirUrl=n=>"https://www.google.com/maps/dir/?api=1&destination="+n.lat+","+n.lng+"&travelmode=walking";
+function shareBiz(n){
+  const url=location.origin+location.pathname+"?n="+encodeURIComponent(n.id);
+  const text=n.nombre+" · "+(n.categoria||"negocio")+" en el mapa de tu barrio";
+  if(navigator.share){navigator.share({title:n.nombre,text,url}).catch(()=>{})}
+  else window.open("https://wa.me/?text="+encodeURIComponent(text+" "+url),"_blank");
+}
 
 function actions(n,inSheet){
   let h="";
@@ -259,6 +324,7 @@ function actions(n,inSheet){
   if(t)h+=`<a class="btn o" href="tel:${esc(t)}">📞 Llamar</a>`;
   const w=waNumber(n);
   if(w)h+=`<a class="btn o" target="_blank" rel="noopener" href="https://wa.me/${w}">💬 WhatsApp</a>`;
+  h+=`<button class="btn o" data-act="share" data-id="${esc(n.id)}">🔗 Compartir</button>`;
   if(!inSheet&&has(n))h+=`<button class="btn o" data-act="see" data-id="${esc(n.id)}">🗺️ Ver en mapa</button>`;
   if(!EDITOR&&CT.correo)h+=`<a class="btn o" href="${mailFix(n)}">⚠️ Reportar error</a>`;
   if(EDITOR){
@@ -269,13 +335,20 @@ function actions(n,inSheet){
   return h;
 }
 function info(n){
-  const ic=iconOf(n.categoria);
+  const ic=iconOf(n.categoria),zona=[n.barrio,n.municipio].filter(Boolean).join(", ");
+  const showDir=n.direccion&&(!approx(n)||EDITOR);
+  const lugar=[showDir?n.direccion:"",zona].filter(Boolean).join(" · ");
+  const hrs=horasTexto(n)||n.horario;
   return `<p>${ic[0]} ${esc(n.categoria||"Sin categoría")}</p>`+
-    (n.direccion?`<p>📍 ${esc(n.direccion)}</p>`:"")+
+    (lugar?`<p>📍 ${esc(lugar)}</p>`:"")+
+    (approx(n)&&has(n)?`<p>📍 Ubicación aproximada (negocio ${n.tipo==="Desde casa"?"desde casa":"que se desplaza"})</p>`:"")+
+    (n.tipo==="Solo en línea"?`<p>🌐 Solo en línea · sin local abierto al público</p>`:"")+
     (n.telefono?`<p>📞 ${esc(n.telefono)}</p>`:"")+
     (n.whatsapp?`<p>💬 ${esc(n.whatsapp)}</p>`:"")+
-    (n.horario?`<p>🕒 ${esc(n.horario)}</p>`:"")+
+    (hrs?`<p>🕒 ${esc(hrs)}${n.horas&&n.horario?" · "+esc(n.horario):""}</p>`:"")+
     (userPos&&has(n)?`<p class="dist">🚶 a ${fmtM(meters(userPos.lat,userPos.lng,n.lat,n.lng))} en línea recta</p>`:"")+
+    openBadge(n)+
+    (n.canal&&n.canal!=="Minorista"?`<span class="badge tag">${esc(n.canal)}</span>`:"")+
     `<span class="badge ${n.verificado?(vOld(n)?"old":"ok"):""}">${esc(estadoDe(n))}</span>`+
     (vOld(n)?`<span class="badge old">Verificación antigua: por actualizar</span>`:"");
 }
@@ -293,9 +366,14 @@ function closeSheet(){sheet.style.display="none"}
 function mkIcon(n){const ic=iconOf(n.categoria);
   return L.divIcon({className:"",html:`<div class="pin" style="background:${ic[1]}"><span>${ic[0]}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});}
 
-// ---- Lista y filtros ----
-let activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="";
+// ---- Búsqueda, filtros y lista ----
+let activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="",fOpen=false,fSun=false,fWho=false,muni="";
 const named=()=>negocios.filter(n=>n.nombre&&n.nombre.trim());
+const hay=n=>norm([n.nombre,n.categoria,approx(n)?"":n.direccion,n.barrio,n.municipio,n.palabras_clave,CATSYN[n.categoria]||"",n.tipo,n.canal].join(" "));
+function matchQ(n,q){
+  if(!q)return true;const h=hay(n);
+  return q.split(/\s+/).every(t=>t&&(h.includes(t)||(t.endsWith("es")&&t.length>4&&h.includes(t.slice(0,-2)))||(t.endsWith("s")&&t.length>3&&h.includes(t.slice(0,-1)))));
+}
 function buildChips(){
   const cats=[...new Set(named().map(n=>n.categoria).filter(Boolean))].sort();
   if(activeCat&&!cats.includes(activeCat))activeCat="";
@@ -304,17 +382,21 @@ function buildChips(){
     const b=document.createElement("button");b.type="button";b.className="chip"+(activeCat===v?" on":"");b.textContent=t;
     b.onclick=()=>{activeCat=v;lim=30;buildChips();render()};box.appendChild(b);
   });
-  const all=[...new Set(Object.keys(ICON).concat(cats))].sort();
-  $("cats").innerHTML=all.map(c=>`<option value="${esc(c)}">`).join("");
+  $("cats").innerHTML=[...new Set(Object.keys(ICON).concat(cats))].sort().map(c=>`<option value="${esc(c)}">`).join("");
+  const ms=[...new Set(named().map(n=>n.municipio).filter(Boolean))].sort(),sel=$("muni");
+  sel.innerHTML='<option value="">Todos los municipios</option>'+ms.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("");
+  sel.value=ms.includes(muni)?muni:"";if(!ms.includes(muni))muni="";
+  sel.style.display=ms.length>=2?"inline-block":"none";
 }
-const HEADER="// INVENTARIO DE NEGOCIOS - MAPA COMERCIAL ENVIGADO\n// ESTE ARCHIVO ES PÚBLICO: no pongas aquí datos privados ni teléfonos personales sin autorización.\n// Campos: id, nombre, categoria, direccion, lat, lng, telefono, whatsapp, horario, fuente, verificado, fecha_verif, metodo_verif, permiso_tel.\n// nombre \"\" = casilla vacía (no se muestra). Cada negocio es una línea; no borres comas ni comillas.\n";
-const rec=n=>({id:n.id,nombre:n.nombre||"",categoria:n.categoria||"",direccion:n.direccion||"",lat:has(n)?n.lat:null,lng:has(n)?n.lng:null,telefono:n.telefono||"",whatsapp:n.whatsapp||"",horario:n.horario||"",fuente:n.fuente||"",verificado:!!n.verificado,fecha_verif:n.fecha_verif||"",metodo_verif:n.metodo_verif||"",permiso_tel:!!n.permiso_tel});
+const HEADER="// INVENTARIO DE NEGOCIOS - MAPA COMERCIAL\n// ESTE ARCHIVO ES PÚBLICO: no pongas aquí datos privados ni teléfonos personales sin autorización.\n// Campos: id, nombre, categoria, tipo, canal, direccion, barrio, municipio, lat, lng, telefono, whatsapp, horas, horario, palabras_clave, fuente, verificado, fecha_verif, metodo_verif, permiso_tel.\n// horas: \"L 08:00-18:00|M 08:00-18:00|...\" (L M X J V S D). nombre \"\" = casilla vacía (no se muestra).\n";
+const rec=n=>({id:n.id,nombre:n.nombre||"",categoria:n.categoria||"",tipo:n.tipo||"",canal:n.canal||"",direccion:n.direccion||"",barrio:n.barrio||"",municipio:n.municipio||"",lat:has(n)?n.lat:null,lng:has(n)?n.lng:null,telefono:n.telefono||"",whatsapp:n.whatsapp||"",horas:n.horas||"",horario:n.horario||"",palabras_clave:n.palabras_clave||"",fuente:n.fuente||"",verificado:!!n.verificado,fecha_verif:n.fecha_verif||"",metodo_verif:n.metodo_verif||"",permiso_tel:!!n.permiso_tel});
 const exportText=()=>HEADER+"const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(rec(n))).join(",\n")+"\n];\n";
 
 function render(){
   const q=norm($("search").value.trim());
   const passV=n=>vf==="pend"?!n.verificado:vf==="ver"?!!n.verificado:vf==="old"?vOld(n):vf==="noloc"?!has(n):true;
-  const f=named().filter(n=>norm(n.nombre+" "+(n.direccion||"")).includes(q)&&(!activeCat||n.categoria===activeCat)&&passV(n));
+  const passF=n=>(!fOpen||(openInfo(n)&&openInfo(n).open))&&(!fSun||sunOpen(n))&&(!fWho||n.canal==="Mayorista"||n.canal==="Ambos")&&(!muni||n.municipio===muni);
+  const f=named().filter(n=>matchQ(n,q)&&(!activeCat||n.categoria===activeCat)&&passV(n)&&passF(n));
   if(userPos)f.sort((a,b)=>(has(a)?meters(userPos.lat,userPos.lng,a.lat,a.lng):1e12)-(has(b)?meters(userPos.lat,userPos.lng,b.lat,b.lng):1e12));
   cluster.clearLayers();
   f.filter(has).forEach(n=>{
@@ -327,10 +409,16 @@ function render(){
     a.innerHTML=`<h3>${esc(n.nombre)}</h3>${info(n)}<div class="btns">${actions(n,false)}</div>`;
     list.appendChild(a);
   });
-  $("cnt").textContent=f.length?`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"No se encontraron negocios.";
+  if(!f.length){
+    list.innerHTML='<div id="empty">No encontramos eso todavía. Prueba con otra palabra o quita algún filtro.'+((AV.url||EDITOR)?'<br><br><button class="btn" id="emptyav" type="button">➕ Avisar de un negocio</button>':"")+'</div>';
+    if($("emptyav"))$("emptyav").onclick=avOpen;
+  }
+  $("cnt").textContent=f.length?`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"";
   $("more").style.display=f.length>lim?"block":"none";
-  if(EDITOR){const all=named(),v=all.filter(n=>n.verificado).length;$("vcount").textContent="Verificados: "+v+" de "+all.length+(all.length?" ("+Math.round(100*v/all.length)+"%)":"")}
-  if(EDITOR){$("exp").value=exportText();$("ecount").textContent=" Cambios locales: "+Object.keys(edits).length+"."}
+  if(EDITOR){
+    const all=named(),v=all.filter(n=>n.verificado).length;$("vcount").textContent="Verificados: "+v+" de "+all.length+(all.length?" ("+Math.round(100*v/all.length)+"%)":"");
+    $("exp").value=exportText();$("ecount").textContent=" Cambios locales: "+Object.keys(edits).length+"."+(CT.correo?"":" ⚠️ Falta tu correo en config-contacto.js.");
+  }
 }
 function show(n){
   if(!has(n))return;
@@ -353,12 +441,26 @@ map.on("click",e=>{
 });
 
 // ---- Formulario del editor ----
-const FS=["nombre","categoria","direccion","telefono","whatsapp","horario","lat","lng","fuente","fecha_verif","metodo_verif"];
-function draftOf(n){const d={};FS.forEach(k=>d[k]=n[k]==null?"":String(n[k]));d.verificado=!!n.verificado;d.permiso_tel=!!n.permiso_tel;return d}
-function readForm(){const d={};FS.forEach(k=>d[k]=$("f-"+k).value);d.verificado=$("f-ver").checked;d.permiso_tel=$("f-perm").checked;return d}
+const FS=["nombre","categoria","tipo","canal","direccion","barrio","municipio","telefono","whatsapp","palabras_clave","horario","lat","lng","fuente","fecha_verif","metodo_verif"];
+function buildHoursGrid(){
+  const g=$("hgrid");g.innerHTML="";
+  DK.forEach((k,i)=>{
+    const r=document.createElement("div");r.className="hr";
+    r.innerHTML=`<label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" id="hd-${k}"> ${DN[i]}</label><input type="time" id="ho-${k}" value="08:00"><input type="time" id="hc-${k}" value="18:00">`;
+    g.appendChild(r);
+  });
+}
+function fillHoras(s){const H=parseHoras(s),pad=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+  DK.forEach(k=>{const on=!!H[k];$("hd-"+k).checked=on;$("ho-"+k).value=on?pad(H[k][0]):"08:00";$("hc-"+k).value=on?pad(H[k][1]):"18:00"})}
+function readHoras(){return DK.filter(k=>$("hd-"+k).checked&&$("ho-"+k).value&&$("hc-"+k).value).map(k=>k+" "+$("ho-"+k).value+"-"+$("hc-"+k).value).join("|")}
+function copyMon(list){const o=$("ho-L").value,c=$("hc-L").value;list.forEach(k=>{$("hd-"+k).checked=true;$("ho-"+k).value=o;$("hc-"+k).value=c})}
+function emptyDraft(){const d={};FS.forEach(k=>d[k]="");d.horas="";d.verificado=false;d.permiso_tel=false;return d}
+function draftOf(n){const d=emptyDraft();FS.forEach(k=>d[k]=n[k]==null?"":String(n[k]));d.horas=n.horas||"";d.verificado=!!n.verificado;d.permiso_tel=!!n.permiso_tel;return d}
+function readForm(){const d={};FS.forEach(k=>d[k]=$("f-"+k).value);d.horas=readHoras();d.verificado=$("f-ver").checked;d.permiso_tel=$("f-perm").checked;return d}
 function openModal(n,draft){
   editing={n,draft:draft||draftOf(n)};
-  FS.forEach(k=>$("f-"+k).value=editing.draft[k]);$("f-ver").checked=editing.draft.verificado;$("f-perm").checked=!!editing.draft.permiso_tel;
+  FS.forEach(k=>$("f-"+k).value=editing.draft[k]);fillHoras(editing.draft.horas);
+  $("f-ver").checked=editing.draft.verificado;$("f-perm").checked=!!editing.draft.permiso_tel;
   $("fid").textContent=n.id+(n.nombre?"":" · casilla vacía");
   $("ftitle").textContent=n.nombre?"Editar negocio":"Nuevo negocio";
   $("modal").style.display="block";$("modal").scrollTop=0;
@@ -370,24 +472,28 @@ function saveForm(){
   let lat=null,lng=null;const a=d.lat.trim().replace(",","."),b=d.lng.trim().replace(",",".");
   if(a||b){
     lat=parseFloat(a);lng=parseFloat(b);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)){alert("Latitud y longitud deben ser números, por ejemplo 6.1738 y -75.5861. Ambas o ninguna.");return}
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)){alert("Latitud y longitud deben ser números, por ejemplo 6.1738 y -75.5865. Ambas o ninguna.");return}
     if(!(lat>5.5&&lat<6.8&&lng>-76.2&&lng<-75)&&!confirm("Estas coordenadas quedan lejos de Envigado. ¿Seguro que están bien? (En Envigado la latitud es ~6.17 y la longitud ~-75.58, con signo negativo.)"))return;
+    if(d.tipo==="Desde casa"||d.tipo==="Se desplaza al cliente"){
+      const la=+lat.toFixed(3),lo=+lng.toFixed(3);
+      if(la!==lat||lo!==lng){lat=la;lng=lo;alert("Negocio desde casa o que se desplaza: la ubicación se redondeó a ~100 m para proteger su dirección. No escribas la dirección exacta.")}
+    }
   }
   let fv=d.fecha_verif.trim(),mv=d.metodo_verif;
   if(fv&&!/^\d{4}-\d{2}-\d{2}$/.test(fv)){alert("La fecha debe tener el formato 2026-10-11 (año-mes-día).");return}
   if(d.verificado){
-    if(lat==null){alert("Para marcar verificado, el negocio debe tener ubicación.");return}
+    if(lat==null&&needsLoc(d.tipo)){alert("Para marcar verificado, el negocio debe tener ubicación.");return}
     if(!mv){alert("Para marcar verificado elige el método de verificación.");return}
     if(!fv)fv=today();
     if((d.telefono.trim()||d.whatsapp.trim())&&!d.permiso_tel&&!confirm("Hay teléfono o WhatsApp y no marcaste que sea un canal comercial público o autorizado. Si es personal, bórralo antes de guardar. ¿Guardar de todos modos?"))return;
   }else{fv="";mv=""}
-  saveEdit(n,{nombre:d.nombre.trim(),categoria:d.categoria.trim(),direccion:d.direccion.trim(),telefono:d.telefono.trim(),whatsapp:d.whatsapp.trim(),horario:d.horario.trim(),lat,lng,fuente:d.fuente.trim(),verificado:d.verificado,fecha_verif:fv,metodo_verif:mv,permiso_tel:!!d.permiso_tel});
+  saveEdit(n,{nombre:d.nombre.trim(),categoria:d.categoria.trim(),tipo:d.tipo,canal:d.canal,direccion:d.direccion.trim(),barrio:d.barrio.trim(),municipio:d.municipio.trim(),telefono:d.telefono.trim(),whatsapp:d.whatsapp.trim(),palabras_clave:d.palabras_clave.trim(),horas:d.horas,horario:d.horario.trim(),lat,lng,fuente:d.fuente.trim(),verificado:d.verificado,fecha_verif:fv,metodo_verif:mv,permiso_tel:!!d.permiso_tel});
   closeModal();editing=null;buildChips();render();
   if(has(n))show(n);
 }
 function freeSlot(){
   let n=negocios.find(x=>!(x.nombre&&x.nombre.trim()));
-  if(!n){const max=Math.max(0,...negocios.map(x=>parseInt(String(x.id).replace(/\D/g,""))||0));n={id:"ENV-"+String(max+1).padStart(3,"0"),nombre:"",categoria:"",direccion:"",lat:null,lng:null,telefono:"",whatsapp:"",horario:"",fuente:"",verificado:false};negocios.push(n)}
+  if(!n){const max=Math.max(0,...negocios.map(x=>parseInt(String(x.id).replace(/\D/g,""))||0));n={id:"ENV-"+String(max+1).padStart(3,"0"),nombre:"",lat:null,lng:null};negocios.push(n)}
   return n;
 }
 function newSlot(draft){const n=freeSlot();openModal(n,draft)}
@@ -396,37 +502,26 @@ function newSlot(draft){const n=freeSlot();openModal(n,draft)}
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const n=negocios.find(x=>x.id===b.dataset.id);if(!n)return;
-  if(b.dataset.act==="pick")startPick(n,false);
-  else if(b.dataset.act==="see")show(n);
-  else if(b.dataset.act==="edit"){closeSheet();openModal(n)}
-  else if(b.dataset.act==="verify")openVerify(n);
+  const act=b.dataset.act;
+  if(act==="pick")startPick(n,false);
+  else if(act==="see")show(n);
+  else if(act==="share")shareBiz(n);
+  else if(act==="edit"){closeSheet();openModal(n)}
+  else if(act==="verify")openVerify(n);
 });
 $("fit").onclick=()=>{const b=cluster.getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]});else map.setView([6.1736,-75.5865],17)};
 $("more").onclick=()=>{lim+=30;render()};
 $("search").addEventListener("input",()=>{lim=30;render()});
-
-if(EDITOR){
-  $("ebar").style.display="block";$("export").style.display="block";
-  $("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
-  $("eadd").onclick=()=>newSlot();
-  $("eexp").onclick=()=>$("export").scrollIntoView({behavior:"smooth"});
-  $("fsave").onclick=saveForm;
-  $("fcancel").onclick=()=>{closeModal();editing=null};
-  $("fpick").onclick=()=>{editing.draft=readForm();startPick(editing.n,true)};
-  $("fdel").onclick=()=>{
-    if(!editing.n.nombre){closeModal();editing=null;return}
-    if(!confirm("¿Vaciar esta casilla? El negocio dejará de mostrarse."))return;
-    saveEdit(editing.n,{nombre:"",categoria:"",direccion:"",telefono:"",whatsapp:"",horario:"",lat:null,lng:null,fuente:"",verificado:false,fecha_verif:"",metodo_verif:"",permiso_tel:false});
-    closeModal();editing=null;buildChips();render();
-  };
-  $("ecopy").onclick=()=>{const t=$("exp");t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert("Copiado. Ahora pégalo en negocios.js en GitHub."),()=>alert("Texto seleccionado: usa Copiar del teléfono."))}catch(_){alert("Texto seleccionado: usa Copiar del teléfono.")}};
-  $("eclear").onclick=()=>{if(confirm("Solo borra esto DESPUÉS de haber pegado el negocios.js exportado en GitHub y de que la página se haya actualizado. ¿Borrar los cambios locales?")){edits={};saved={};try{localStorage.removeItem("env-edits");localStorage.removeItem("env-loc")}catch(_){}location.reload()}};
-}
+function toggleChip(id,get,set){const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle("on",get());lim=30;render()}}
+toggleChip("fopen",()=>fOpen,v=>fOpen=v);toggleChip("fsun",()=>fSun,v=>fSun=v);toggleChip("fwho",()=>fWho,v=>fWho=v);
+$("muni").onchange=()=>{muni=$("muni").value;lim=30;render()};
+buildHoursGrid();
+document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyMon({LV:["M","X","J","V"],LS:["M","X","J","V","S"],LD:["M","X","J","V","S","D"]}[b.dataset.copy]));
 
 // ---- Avisos ciudadanos ----
 const AV=(typeof AVISOS!=="undefined"&&AVISOS)||{url:"",campos:{}};
 const AVKEYS=["nombre","categoria","direccion","telefono","lat","lng","precision","metodo"];
-const AVCATS=["Restaurante","Comida rápida","Café","Bar","Tienda","Ropa","Calzado","Farmacia","Salud","Belleza","Tecnología","Servicios financieros","Supermercado","Otro"];
+const AVCATS=["Tienda de barrio","Restaurante","Comida rápida","Panadería","Café","Farmacia","Ferretería","Llantería","Costurera","Carpintería","Mecánica","Peluquería","Papelería","Fruver","Carnicería","Ropa","Calzado","Tecnología","Servicios financieros","Otro"];
 const ENV_BOX={latMin:6.12,latMax:6.23,lngMin:-75.62,lngMax:-75.54};
 const LINK=/https?:|www\.|\.com\b|\.co\b|@/i;
 let av=null,amap=null,amark=null;
@@ -437,7 +532,7 @@ function meters(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b);
   const k=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(k))}
 function avReset(){
   av={lat:null,lng:null,prec:"",gps:false,moved:false,cat:"",t0:Date.now()};
-  ["av-nombre","av-direccion","av-telefono","av-web"].forEach(i=>$(i).value="");
+  ["av-nombre","av-direccion","av-telefono","av-web"].forEach(i=>$(i).value="");$("av-casa").checked=false;
   avErr("");avMsg("");
   if(amark&&amap){amap.removeLayer(amark)}amark=null;
   [...$("avcats").children].forEach(b=>b.classList.remove("on"));
@@ -472,13 +567,13 @@ function avGps(){
   {enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 function avRate(){let t=[];try{t=JSON.parse(localStorage.getItem("env-av")||"[]")}catch(e){}
-  const now=Date.now();t=t.filter(x=>now-x<864e5);return t}
+  const now=Date.now();return t.filter(x=>now-x<864e5)}
 async function avSend(){
   avErr("");
-  if($("av-web").value){avDone();return}                       // trampa para bots
-  const nombre=clean($("av-nombre").value),dir=clean($("av-direccion").value),tel=$("av-telefono").value.trim();
+  if($("av-web").value){avDone();return}
+  const nombre=clean($("av-nombre").value),dir=clean($("av-direccion").value),tel=$("av-telefono").value.trim(),casa=$("av-casa").checked;
   if(av.lat==null)return avErr("Usa tu ubicación o toca el mapa para marcar el punto.");
-  if(!(av.lat>ENV_BOX.latMin&&av.lat<ENV_BOX.latMax&&av.lng>ENV_BOX.lngMin&&av.lng<ENV_BOX.lngMax))return avErr("Ese punto queda fuera de Envigado. Muévelo al negocio.");
+  if(!(av.lat>ENV_BOX.latMin&&av.lat<ENV_BOX.latMax&&av.lng>ENV_BOX.lngMin&&av.lng<ENV_BOX.lngMax))return avErr("Ese punto queda fuera del Valle de Aburrá. Muévelo al negocio.");
   if(nombre.length<2||/^(.)\1+$/.test(nombre))return avErr("Escribe el nombre del negocio.");
   if(!av.cat)return avErr("Elige el tipo de negocio.");
   if(tel&&!/^\+?[\d\s\-()]{7,16}$/.test(tel))return avErr("Revisa el teléfono: solo números.");
@@ -492,7 +587,7 @@ async function avSend(){
   if(!AV.url)return alert("Falta configurar el envío de avisos (config-avisos.js).");
   const fd=new FormData(),c=AV.campos;
   const metodo=!av.gps?"Manual":(av.moved?"GPS ajustado":"GPS");
-  const vals={nombre,categoria:av.cat,direccion:dir,telefono:tel,lat:av.lat.toFixed(6),lng:av.lng.toFixed(6),precision:av.gps?String(av.prec):"",metodo};
+  const vals={nombre,categoria:av.cat+(casa?" · desde casa":""),direccion:casa?"":dir,telefono:tel,lat:av.lat.toFixed(6),lng:av.lng.toFixed(6),precision:av.gps?String(av.prec):"",metodo};
   AVKEYS.forEach(k=>fd.append(c[k],vals[k]));
   $("avsend").disabled=true;$("avsend").textContent="Enviando…";
   try{await fetch(AV.url,{method:"POST",mode:"no-cors",body:fd})}
@@ -506,37 +601,15 @@ $("avbtn").onclick=avOpen;$("avx").onclick=avClose;$("avclose").onclick=avClose;
 $("avmore").onclick=()=>{$("avform").style.display="block";$("avok").style.display="none";avReset();setTimeout(()=>amap.invalidateSize(),100)};
 $("avgps").onclick=avGps;$("avsend").onclick=avSend;
 
-if(EDITOR){
-  $("avcfg").style.display="block";
-  $("avgen").onclick=()=>{
-    try{
-      const u=new URL($("avlink").value.trim()),m=u.pathname.match(/\/forms\/d\/e\/([^\/]+)/);if(!m)throw 0;
-      const campos={};
-      u.searchParams.forEach((v,k)=>{const x=v.trim().toLowerCase();if(/^entry\.\d+$/.test(k)&&AVKEYS.includes(x))campos[x]=k});
-      const falta=AVKEYS.filter(k=>!campos[k]);
-      if(falta.length){alert("Faltan respuestas de ejemplo para: "+falta.join(", ")+". Rellena cada pregunta con su propio nombre y copia el enlace de nuevo.");return}
-      const ordered={};AVKEYS.forEach(k=>ordered[k]=campos[k]);
-      $("avout").value="// Configuración de avisos ciudadanos\nconst AVISOS = "+JSON.stringify({url:"https://docs.google.com/forms/d/e/"+m[1]+"/formResponse",campos:ordered},null,2)+";\n";
-    }catch(e){alert("No reconozco ese enlace. Debe ser el enlace prefabricado del formulario de Google.")}
-  };
-  $("epaste").onclick=()=>{
-    const t=prompt("Pega aquí la fila del aviso copiada de tu hoja de cálculo:");if(!t)return;
-    const c=t.split("\t").map(x=>x.trim()),o=c.length>=9?1:0,g=i=>c[o+i]||"";
-    newSlot({nombre:g(0),categoria:g(1)==="Otro"?"":g(1),direccion:g(2),telefono:g(3),whatsapp:"",horario:"",lat:g(4).replace(",","."),lng:g(5).replace(",","."),fuente:"Aviso ciudadano · "+(g(7)||"?")+(g(6)?" ±"+g(6)+" m":""),verificado:false});
-  };
-}
-
-// ---- Verificación rápida, filtros y "Cerca de mí" ----
+// ---- Verificación rápida y "Cerca de mí" ----
 const VMETHODS=["Visita en persona","Sitio web","Red social","Confirmado por el dueño","Aviso ciudadano revisado"];
 let vTarget=null,userMarker=null;
 function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function closeV(){$("vmodal").style.display="none";vTarget=null}
-function openVerify(n){
-  vTarget=n;$("vname").textContent=n.nombre;$("vperm").checked=!!n.permiso_tel;$("vmodal").style.display="block";
-}
+function openVerify(n){vTarget=n;$("vname").textContent=n.nombre;$("vperm").checked=!!n.permiso_tel;$("vmodal").style.display="block"}
 function verifyWith(m){
   const n=vTarget;if(!n)return;
-  if(!has(n)){alert("Primero ubica el negocio en el mapa (botón Ubicar).");closeV();return}
+  if(!has(n)&&needsLoc(n.tipo)){alert("Primero ubica el negocio en el mapa (botón Ubicar).");closeV();return}
   const perm=$("vperm").checked;
   if((n.telefono||n.whatsapp)&&!perm&&!confirm("Este negocio tiene teléfono o WhatsApp y no marcaste que sea un canal comercial público o autorizado. Si es personal, bórralo (Editar) antes de exportar. ¿Verificar de todos modos?"))return;
   saveEdit(n,{verificado:true,fecha_verif:today(),metodo_verif:m,permiso_tel:perm});
@@ -558,11 +631,52 @@ function nearToggle(){
 $("near").onclick=nearToggle;
 $("vfilter").onchange=()=>{vf=$("vfilter").value;lim=30;render()};
 if(CT.correo){const a=$("corr");a.href="mailto:"+encodeURIComponent(CT.correo)+"?subject="+encodeURIComponent("Corregir o retirar mi negocio")+"&body="+encodeURIComponent("Nombre del negocio:\nQuiero: corregir / retirar (borra lo que no aplique)\nDetalle:\n");a.style.display="inline"}
+
+// ---- Modo editor ----
 if(EDITOR){
-  $("vfilter").style.display="inline-block";$("vcount").style.display="inline";
-  if(!CT.correo)$("ecount").textContent+=" ⚠️ Falta tu correo en config-contacto.js (política de privacidad y «Corregir o retirar»).";
+  $("ebar").style.display="block";$("export").style.display="block";$("avcfg").style.display="block";
+  $("vfilter").style.display="inline-block";$("vcount").style.display="inline-block";
+  $("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
+  $("eadd").onclick=()=>newSlot();
+  $("eexp").onclick=()=>$("export").scrollIntoView({behavior:"smooth"});
+  $("fsave").onclick=saveForm;
+  $("fcancel").onclick=()=>{closeModal();editing=null};
+  $("fpick").onclick=()=>{editing.draft=readForm();startPick(editing.n,true)};
+  $("fdel").onclick=()=>{
+    if(!editing.n.nombre){closeModal();editing=null;return}
+    if(!confirm("¿Vaciar esta casilla? El negocio dejará de mostrarse."))return;
+    saveEdit(editing.n,{nombre:"",categoria:"",tipo:"",canal:"",direccion:"",barrio:"",municipio:"",telefono:"",whatsapp:"",horas:"",horario:"",palabras_clave:"",lat:null,lng:null,fuente:"",verificado:false,fecha_verif:"",metodo_verif:"",permiso_tel:false});
+    closeModal();editing=null;buildChips();render();
+  };
+  $("ecopy").onclick=()=>{const t=$("exp");t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert("Copiado. Ahora pégalo en negocios.js en GitHub."),()=>alert("Texto seleccionado: usa Copiar del teléfono."))}catch(_){alert("Texto seleccionado: usa Copiar del teléfono.")}};
+  $("eclear").onclick=()=>{if(confirm("Solo borra esto DESPUÉS de haber pegado el negocios.js exportado en GitHub y de que la página se haya actualizado. ¿Borrar los cambios locales?")){edits={};saved={};try{localStorage.removeItem("env-edits");localStorage.removeItem("env-loc")}catch(_){}location.reload()}};
+  $("avgen").onclick=()=>{
+    try{
+      const u=new URL($("avlink").value.trim()),m=u.pathname.match(/\/forms\/d\/e\/([^\/]+)/);if(!m)throw 0;
+      const campos={};
+      u.searchParams.forEach((v,k)=>{const x=v.trim().toLowerCase();if(/^entry\.\d+$/.test(k)&&AVKEYS.includes(x))campos[x]=k});
+      const falta=AVKEYS.filter(k=>!campos[k]);
+      if(falta.length){alert("Faltan respuestas de ejemplo para: "+falta.join(", ")+". Rellena cada pregunta con su propio nombre y copia el enlace de nuevo.");return}
+      const ordered={};AVKEYS.forEach(k=>ordered[k]=campos[k]);
+      $("avout").value="// Configuración de avisos ciudadanos\nconst AVISOS = "+JSON.stringify({url:"https://docs.google.com/forms/d/e/"+m[1]+"/formResponse",campos:ordered},null,2)+";\n";
+    }catch(e){alert("No reconozco ese enlace. Debe ser el enlace prefabricado del formulario de Google.")}
+  };
+  $("epaste").onclick=()=>{
+    const t=prompt("Pega aquí la fila del aviso copiada de tu hoja de cálculo:");if(!t)return;
+    const c=t.split("\t").map(x=>x.trim()),o=c.length>=9?1:0,g=i=>c[o+i]||"";
+    const casa=/desde casa/i.test(g(1)),cat=g(1).replace(/\s*·\s*desde casa/i,"");
+    const d=emptyDraft();
+    Object.assign(d,{nombre:g(0),categoria:cat==="Otro"?"":cat,tipo:casa?"Desde casa":"",direccion:g(2),telefono:g(3),lat:g(4).replace(",","."),lng:g(5).replace(",","."),fuente:"Aviso ciudadano · "+(g(7)||"?")+(g(6)?" ±"+g(6)+" m":"")});
+    newSlot(d);
+  };
 }
+
+// ---- Inicio ----
 buildChips();render();
+(function(){
+  const id=new URLSearchParams(location.search).get("n");if(!id)return;
+  const n=negocios.find(x=>x.id===id&&x.nombre);if(n&&has(n)){map.setView([n.lat,n.lng],18);openSheet(n)}
+})();
 </script>
 </body>
 </html>

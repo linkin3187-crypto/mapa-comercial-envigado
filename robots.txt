@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://linkin3187-crypto.github.io/mapa-comercial-envigado/sitemap.xml
