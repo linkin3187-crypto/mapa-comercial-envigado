@@ -81,6 +81,13 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
 #averr{color:#b91c1c;font-size:14px;margin-top:8px;min-height:18px}
 #avok{text-align:center;padding:20px 6px}#avok h3{margin:8px 0}
 #avbtn{margin-top:10px;display:none;font-size:15px;padding:11px 16px}
+#imodal{display:none;position:fixed;inset:0;z-index:2200;background:#0008;overflow-y:auto;padding:12px}
+#ibox{position:relative;background:#fff;max-width:560px;margin:10px auto 40px;border-radius:14px;padding:16px}
+#ibox h3{margin:0 28px 4px 0;font-size:18px}#ibox textarea{height:110px;margin-top:6px}
+#ibox input[type=text]{width:100%;padding:10px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px}
+#ibox label{display:block;font-size:13px;color:#475467;margin-top:10px}
+#ires{font-size:14px;margin-top:10px;line-height:1.5}
+#ix{position:absolute;top:8px;right:12px;border:0;background:none;font-size:26px;cursor:pointer;color:#667085}
 </style>
 </head>
 <body>
@@ -94,16 +101,19 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
   <button class="btn" id="eadd" type="button">+ Agregar negocio</button>
   <button class="btn o" id="eexp" type="button">Exportar</button>
   <button class="btn o" id="epaste" type="button">Pegar aviso</button>
+  <button class="btn o" id="eimp" type="button">📥 Importar OSM</button>
 </div>
 
 <div class="top">
-  <input id="search" type="search" placeholder="¿Qué buscas? Ej: llantas, arreglar ruedo, tornillos…" aria-label="Buscar un negocio o servicio">
+  <input id="search" type="search" placeholder="¿Qué necesitas? Ej: arreglar licuadora, refuerzo de matemáticas, llantas…" aria-label="Buscar un negocio o servicio">
   <div id="chips" role="group" aria-label="Filtrar por categoría"></div>
   <div id="tools">
     <button class="chip" id="near" type="button">📍 Cerca de mí</button>
     <button class="chip" id="fopen" type="button">🟢 Abierto ahora</button>
     <button class="chip" id="fsun" type="button">☀️ Abre domingo</button>
     <button class="chip" id="fwho" type="button">📦 Mayoristas</button>
+    <select id="grpsel" aria-label="Grupo de servicios"><option value="">Todos los grupos</option></select>
+    <select id="mibarrio" aria-label="Mi barrio"><option value="">Mi barrio…</option></select>
     <select id="muni" aria-label="Municipio"><option value="">Todos los municipios</option></select>
     <select id="vfilter" aria-label="Filtro de verificación">
       <option value="">Todos</option><option value="pend">Pendientes de verificar</option><option value="ver">Verificados</option><option value="old">Verificación antigua</option><option value="noloc">Sin ubicación</option>
@@ -185,12 +195,37 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
   <div class="btns"><button class="btn o" id="vcancel" type="button">Cancelar</button></div>
 </div></div>
 
+<!-- Importar de OpenStreetMap -->
+<div id="imodal"><div id="ibox">
+  <button id="ix" type="button" aria-label="Cerrar">×</button>
+  <h3>📥 Importar negocios de OpenStreetMap</h3>
+  <p class="hint">Trae negocios con nombre y ubicación desde datos abiertos. Quedan como «sin verificar».</p>
+  <label>1. Consulta para overpass-turbo.eu (centro de Itagüí, área aproximada)</label>
+  <textarea id="iq" readonly>[out:json][timeout:60];
+(
+  nwr["shop"](6.176,-75.608,6.194,-75.590);
+  nwr["amenity"~"restaurant|fast_food|bar|cafe|pharmacy|bank|dentist|clinic|doctors|veterinary|kindergarten"](6.176,-75.608,6.194,-75.590);
+  nwr["craft"](6.176,-75.608,6.194,-75.590);
+);
+out center tags;</textarea>
+  <div class="btns"><button class="btn o" id="icq" type="button">Copiar consulta</button></div>
+  <p class="hint">En Overpass Turbo pega la consulta, pulsa <b>Run</b> (Ejecutar), y en <b>Export</b> copia o descarga los datos (JSON o GeoJSON). Ajusta el rectángulo en el mapa si quieres otra zona.</p>
+  <label>2. Carga el archivo o pega los datos</label>
+  <input type="file" id="ifile" accept=".json,.geojson,.txt,application/json" style="width:100%;padding:8px 0;font-size:15px">
+  <textarea id="itxt" placeholder='{"elements":[...]}'></textarea>
+  <label>Municipio de estos negocios<input type="text" id="imun" value="Itagüí" autocomplete="off"></label>
+  <label style="display:flex;gap:8px;align-items:flex-start;color:#1f2430"><input type="checkbox" id="itel" style="margin-top:3px"> Importar también los teléfonos de OpenStreetMap (déjalo desmarcado si no estás seguro de que sean comerciales)</label>
+  <div class="btns"><button class="btn" id="ian" type="button">Analizar</button><button class="btn" id="iimp" type="button" disabled style="opacity:.5">Importar</button></div>
+  <div id="ires"></div>
+</div></div>
+
 <!-- Editor -->
 <div id="modal"><div id="form">
   <h3 id="ftitle">Editar negocio</h3><p class="hint" id="fid"></p>
   <label>Nombre del negocio *<input type="text" id="f-nombre" autocomplete="off"></label>
   <label>Categoría<input type="text" id="f-categoria" list="cats" autocomplete="off"></label>
   <datalist id="cats"></datalist>
+  <p class="hint">Salud: lista solo prestadores autorizados y no publiques recomendaciones médicas.</p>
   <div class="two">
     <label>Tipo de negocio<select id="f-tipo"><option value="">Local físico</option><option>Desde casa</option><option>Se desplaza al cliente</option><option>Solo en línea</option></select></label>
     <label>Vende<select id="f-canal"><option value="">—</option><option>Minorista</option><option>Mayorista</option><option>Ambos</option></select></label>
@@ -201,6 +236,8 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
     <label>Barrio<input type="text" id="f-barrio" autocomplete="off"></label>
     <label>Municipio<input type="text" id="f-municipio" placeholder="Envigado" autocomplete="off"></label>
   </div>
+  <label>Barrios que cubre (si se desplaza)<input type="text" id="f-cobertura" placeholder="La Paz, Zona Centro, Sabaneta" autocomplete="off"></label>
+  <p class="hint">Sepáralos con coma. Escribe «Todo el Valle» si atiende en todo el Valle de Aburrá.</p>
   <div class="two">
     <label>Teléfono<input type="text" id="f-telefono" inputmode="tel" placeholder="604 000 0000" autocomplete="off"></label>
     <label>WhatsApp<input type="text" id="f-whatsapp" inputmode="tel" placeholder="300 123 4567" autocomplete="off"></label>
@@ -248,6 +285,51 @@ const EDITOR=/[?&]editar/.test(location.search);
 const ICON={"Tienda de barrio":["🏪","#ca8a04"],"Tienda":["🏪","#ca8a04"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Panadería":["🥖","#b45309"],"Café":["☕","#92400e"],"Bar":["🍺","#7c3aed"],"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Ferretería":["🔧","#475569"],"Llantería":["🛞","#334155"],"Costurera":["🧵","#c026d3"],"Mercería":["🧵","#c026d3"],"Carpintería":["🪚","#a16207"],"Mecánica":["🛠️","#1d4ed8"],"Peluquería":["💇","#e11d48"],"Belleza":["💇","#e11d48"],"Papelería":["✏️","#0891b2"],"Fruver":["🍎","#65a30d"],"Carnicería":["🥩","#b91c1c"],"Ropa":["👕","#db2777"],"Calzado":["👟","#2563eb"],"Tecnología":["📱","#4f46e5"],"Salud":["🩺","#0d9488"],"Servicios financieros":["🏦","#0369a1"],"Supermercado":["🛒","#65a30d"],"Librería":["📚","#7e22ce"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"],"Electricista":["💡","#ca8a04"],"Plomero":["🚰","#0284c7"],"Cerrajería":["🔑","#6b7280"],"Tapicería":["🛋️","#9a3412"],"Zapatería":["👞","#78350f"],"Lavandería":["🧺","#0ea5e9"]};
 const iconOf=c=>ICON[c]||["📍","#475569"];
 const CATSYN={"Tienda de barrio":"abarrotes mercado huevos leche gaseosa hielo mecato granos miscelanea","Tienda":"abarrotes mercado huevos leche gaseosa hielo mecato miscelanea","Farmacia":"medicinas drogueria pastillas remedios","Droguería":"medicinas farmacia pastillas remedios","Ferretería":"tornillos clavos herramientas cemento pintura tuberia bombillos cerraduras","Llantería":"llantas neumaticos pinchazo montallantas vulcanizadora rines","Costurera":"arreglos ruedo modista confeccion cremallera costura sastre dobladillo","Mercería":"hilos botones cierres agujas telas costura","Carpintería":"madera muebles puertas closet ebanista cocina integral","Mecánica":"taller carro moto aceite frenos revision tecnomecanica","Peluquería":"corte cabello barberia unas peinado","Belleza":"peluqueria unas spa maquillaje","Panadería":"pan pasteleria tortas pandebono","Papelería":"cuadernos fotocopias impresiones utiles cartulina","Fruver":"frutas verduras plaza","Carnicería":"carne pollo cerdo res","Restaurante":"almuerzo comida corrientazo cena menu","Comida rápida":"hamburguesa pizza perro salchipapa empanadas","Café":"cafe tinto postres desayuno","Tecnología":"celulares computador reparacion pantallas","Servicios financieros":"banco cajero corresponsal","Electricista":"luz cables instalaciones","Plomero":"tuberias fugas agua destape","Cerrajería":"llaves cerraduras","Zapatería":"remontadora arreglo zapatos","Lavandería":"ropa lavado tintoreria"};
+Object.assign(ICON,{"Reparación de electrodomésticos":["🔌","#b45309"],"Reparación de celulares":["📱","#4f46e5"],"Reparación de computadores":["💻","#4338ca"],"Taller de motos":["🏍️","#1d4ed8"],"Taller de bicicletas":["🚲","#0e7490"],"Grúa":["🚛","#475569"],"Pintor":["🎨","#be185d"],"Vidriería":["🪟","#0284c7"],"Refuerzo escolar":["📚","#7e22ce"],"Academia o cursos":["🎓","#6d28d9"],"Jardín infantil":["🧸","#db2777"],"Odontología":["🦷","#0d9488"],"Fisioterapia":["🦴","#0f766e"],"Consultorio médico":["🏥","#dc2626"],"Laboratorio clínico":["🧪","#059669"],"Veterinaria":["🐾","#92400e"],"Peluquería canina":["🐩","#a21caf"],"Tienda de mascotas":["🐶","#b45309"],"Impresión y fotocopias":["🖨️","#0891b2"],"Fotografía":["📷","#4b5563"],"Mensajería y envíos":["📦","#a16207"],"Barbería":["💈","#1e40af"],"Uñas":["💅","#e11d48"],"Modista":["🧵","#c026d3"]});
+Object.assign(CATSYN,{"Reparación de electrodomésticos":"tecnico licuadora nevera lavadora secadora plancha microondas estufa horno ventilador televisor aspiradora arreglo reparacion domicilio","Reparación de celulares":"celular movil pantalla bateria cargador reparacion arreglo tecnico","Reparación de computadores":"computador portatil laptop impresora formateo reparacion arreglo tecnico","Taller de motos":"moto motos motocicleta mecanico aceite frenos llantas","Taller de bicicletas":"bicicleta bicicletas bici pinchazo mecanico","Grúa":"grua remolque carro varado transporte","Pintor":"pintura paredes casa pintar","Vidriería":"vidrios espejos ventanas cortes","Refuerzo escolar":"tareas clases profesor tutor matematicas ingles fisica quimica bachillerato primaria icfes colegio educacion refuerzo","Academia o cursos":"curso cursos capacitacion programacion sistemas idiomas ingles educacion academia instituto","Jardín infantil":"ninos cuidado guarderia educacion inicial","Odontología":"dentista muela caries ortodoncia salud","Fisioterapia":"terapia espalda rehabilitacion masaje salud","Consultorio médico":"medico doctor consulta cita especialista salud","Laboratorio clínico":"examenes sangre laboratorio salud","Veterinaria":"veterinario mascotas perro gato vacunas cachorro","Peluquería canina":"mascotas perro bano corte","Tienda de mascotas":"mascotas perro gato alimento concentrado","Impresión y fotocopias":"imprimir impresion fotocopias copias escanear plastificar anillar tramites documentos","Fotografía":"fotos carnet documento pasaporte tramites","Mensajería y envíos":"envios paquetes encomiendas mensajeria","Barbería":"corte barba afeitado cabello","Uñas":"manicure pedicure unas","Modista":"arreglos ruedo costura confeccion vestidos"});
+const GROUP_ORDER=["Comercio cotidiano","Comida","Reparaciones","Hogar","Educación","Salud","Mascotas","Trámites","Transporte","Cuidado personal","Otros"];
+const CATGROUP={};
+const setGrp=(g,cs)=>cs.split("|").forEach(c=>CATGROUP[c]=g);
+setGrp("Comercio cotidiano","Tienda de barrio|Tienda|Supermercado|Panadería|Fruver|Carnicería|Papelería|Ferretería|Variedades|Almacén|Regalos|Accesorios|Ropa|Calzado|Joyería|Librería|Mercería|Tecnología");
+setGrp("Comida","Restaurante|Comida rápida|Café|Bar");
+setGrp("Reparaciones","Reparación de electrodomésticos|Reparación de celulares|Reparación de computadores|Zapatería|Tapicería");
+setGrp("Hogar","Electricista|Plomero|Cerrajería|Carpintería|Pintor|Vidriería|Lavandería");
+setGrp("Educación","Refuerzo escolar|Academia o cursos|Jardín infantil");
+setGrp("Salud","Farmacia|Droguería|Salud|Odontología|Fisioterapia|Consultorio médico|Laboratorio clínico|Óptica");
+setGrp("Mascotas","Veterinaria|Peluquería canina|Tienda de mascotas");
+setGrp("Trámites","Impresión y fotocopias|Fotografía|Mensajería y envíos|Servicios financieros");
+setGrp("Transporte","Mecánica|Taller de motos|Taller de bicicletas|Llantería|Grúa");
+setGrp("Cuidado personal","Peluquería|Belleza|Barbería|Uñas|Costurera|Modista");
+const groupOf=n=>CATGROUP[n.categoria]||"Otros";
+const NEEDSYN={};
+const addN=(keys,exp)=>keys.split(" ").forEach(k=>NEEDSYN[k]=(NEEDSYN[k]||[]).concat(exp.split(" ")));
+addN("arreglar arreglo reparar reparacion componer danado dano","reparacion arreglos");
+addN("licuadora nevera refrigerador lavadora secadora plancha microondas estufa horno ventilador televisor tv aspiradora","electrodomesticos");
+addN("celular movil pantalla cargador bateria iphone samsung","celulares");
+addN("computador pc laptop portatil impresora formatear","computadores");
+addN("moto motocicleta","motos");
+addN("bicicleta bici","bicicletas");
+addN("tarea clase profesor profe tutor colegio bachillerato primaria icfes matematica calculo fisica quimica ingles lectura","refuerzo educacion");
+addN("curso capacitacion programacion idioma sistemas","cursos educacion");
+addN("imprimir impresion fotocopia copia escanear escaner plastificar anillar laminar documento","impresion fotocopias tramites");
+addN("foto fotografia carnet pasaporte","fotografia tramites");
+addN("envio encomienda mensajeria paquete","envios mensajeria");
+addN("perro gato mascota veterinario vacuna cachorro guarderia paseador","mascotas veterinaria");
+addN("muela caries dentista odontologo ortodoncia","odontologia");
+addN("espalda terapia fisioterapeuta rehabilitacion masaje","fisioterapia");
+addN("medico doctor consulta cita especialista","consultorio medico salud");
+addN("tuberia fuga gotera destapar grifo","plomero plomeria");
+addN("luz cable toma breaker corto instalacion","electricista");
+addN("cerradura candado","cerrajeria");
+addN("puerta closet mueble","carpinteria");
+addN("corte pelo barba afeitar","peluqueria barberia");
+addN("ruedo bota cremallera dobladillo vestido","costurera modista");
+addN("suela zapato remontar","zapateria");
+addN("lavar tintoreria","lavanderia");
+addN("pintar pintura pared","pintor pintura");
+addN("vidrio espejo ventana","vidrieria");
+const STOP=new Set("de del la el los las un una unos unas para por con en y o a al lo que mi mis me se es esta estoy hay como donde cual cuales cerca hoy ahora necesito busco quiero favor casa barrio aqui".split(" "));
+const coverList=n=>String(n.cobertura||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
 const $=id=>document.getElementById(id);
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -343,6 +425,8 @@ function info(n){
     (lugar?`<p>📍 ${esc(lugar)}</p>`:"")+
     (approx(n)&&has(n)?`<p>📍 Ubicación aproximada (negocio ${n.tipo==="Desde casa"?"desde casa":"que se desplaza"})</p>`:"")+
     (n.tipo==="Solo en línea"?`<p>🌐 Solo en línea · sin local abierto al público</p>`:"")+
+    (n.cobertura?`<p>🚗 Atiende en: ${esc(n.cobertura)}</p>`:"")+
+    (groupOf(n)==="Salud"?`<p class="hint">Datos de contacto. No reemplaza una consulta médica.</p>`:"")+
     (n.telefono?`<p>📞 ${esc(n.telefono)}</p>`:"")+
     (n.whatsapp?`<p>💬 ${esc(n.whatsapp)}</p>`:"")+
     (hrs?`<p>🕒 ${esc(hrs)}${n.horas&&n.horario?" · "+esc(n.horario):""}</p>`:"")+
@@ -367,37 +451,60 @@ function mkIcon(n){const ic=iconOf(n.categoria);
   return L.divIcon({className:"",html:`<div class="pin" style="background:${ic[1]}"><span>${ic[0]}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});}
 
 // ---- Búsqueda, filtros y lista ----
-let activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="",fOpen=false,fSun=false,fWho=false,muni="";
+let activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="",fOpen=false,fSun=false,fWho=false,muni="",grpSel="",mb="";
 const named=()=>negocios.filter(n=>n.nombre&&n.nombre.trim());
-const hay=n=>norm([n.nombre,n.categoria,approx(n)?"":n.direccion,n.barrio,n.municipio,n.palabras_clave,CATSYN[n.categoria]||"",n.tipo,n.canal].join(" "));
-function matchQ(n,q){
-  if(!q)return true;const h=hay(n);
-  return q.split(/\s+/).every(t=>t&&(h.includes(t)||(t.endsWith("es")&&t.length>4&&h.includes(t.slice(0,-2)))||(t.endsWith("s")&&t.length>3&&h.includes(t.slice(0,-1)))));
+const hay=n=>norm([n.nombre,n.categoria,groupOf(n),approx(n)?"":n.direccion,n.barrio,n.municipio,n.cobertura,n.palabras_clave,CATSYN[n.categoria]||"",n.tipo,n.canal].join(" "));
+const coversAll=n=>norm(n.cobertura||"").includes("todo el valle");
+const inBarrio=(n,b)=>{const nb=norm(b);return norm(n.barrio)===nb||coverList(n).some(x=>norm(x)===nb)||coversAll(n)};
+const tokensOf=q=>norm(q).split(/[^a-z0-9]+/).filter(t=>t.length>1&&!STOP.has(t));
+function tokHit(h,t){
+  const s=t.endsWith("es")&&t.length>4?t.slice(0,-2):null,p=t.endsWith("s")&&t.length>3?t.slice(0,-1):null;
+  if(h.includes(t)||(s&&h.includes(s))||(p&&h.includes(p)))return true;
+  const syn=NEEDSYN[t]||(p&&NEEDSYN[p])||(s&&NEEDSYN[s])||[];
+  return syn.some(x=>h.includes(x));
 }
+const scoreN=(n,toks)=>{const h=hay(n);return toks.filter(t=>tokHit(h,t)).length};
 function buildChips(){
-  const cats=[...new Set(named().map(n=>n.categoria).filter(Boolean))].sort();
+  const allCats=[...new Set(named().map(n=>n.categoria).filter(Boolean))].sort();
+  const cats=allCats.filter(c=>!grpSel||(CATGROUP[c]||"Otros")===grpSel);
   if(activeCat&&!cats.includes(activeCat))activeCat="";
   const box=$("chips");box.innerHTML="";
   [["","Todos"]].concat(cats.map(c=>[c,iconOf(c)[0]+" "+c])).forEach(([v,t])=>{
     const b=document.createElement("button");b.type="button";b.className="chip"+(activeCat===v?" on":"");b.textContent=t;
     b.onclick=()=>{activeCat=v;lim=30;buildChips();render()};box.appendChild(b);
   });
-  $("cats").innerHTML=[...new Set(Object.keys(ICON).concat(cats))].sort().map(c=>`<option value="${esc(c)}">`).join("");
+  $("cats").innerHTML=[...new Set(Object.keys(ICON).concat(allCats))].sort().map(c=>`<option value="${esc(c)}">`).join("");
   const ms=[...new Set(named().map(n=>n.municipio).filter(Boolean))].sort(),sel=$("muni");
   sel.innerHTML='<option value="">Todos los municipios</option>'+ms.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("");
   sel.value=ms.includes(muni)?muni:"";if(!ms.includes(muni))muni="";
   sel.style.display=ms.length>=2?"inline-block":"none";
+  const gs=GROUP_ORDER.filter(g=>named().some(n=>groupOf(n)===g)),gsel=$("grpsel");
+  gsel.innerHTML='<option value="">Todos los grupos</option>'+gs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
+  if(!gs.includes(grpSel))grpSel="";gsel.value=grpSel;
+  gsel.style.display=gs.length>=2?"inline-block":"none";
+  const bm=new Map();named().forEach(n=>[n.barrio,...coverList(n)].forEach(x=>{if(x&&!/todo el valle/.test(norm(x))&&!bm.has(norm(x)))bm.set(norm(x),x)}));
+  const bs=[...bm.values()].sort((a,b)=>a.localeCompare(b,"es")),bsel=$("mibarrio");
+  bsel.innerHTML='<option value="">Mi barrio…</option>'+bs.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("");
+  if(!bs.includes(mb))mb="";bsel.value=mb;
+  bsel.style.display=bs.length>=2?"inline-block":"none";
 }
-const HEADER="// INVENTARIO DE NEGOCIOS - MAPA COMERCIAL\n// ESTE ARCHIVO ES PÚBLICO: no pongas aquí datos privados ni teléfonos personales sin autorización.\n// Campos: id, nombre, categoria, tipo, canal, direccion, barrio, municipio, lat, lng, telefono, whatsapp, horas, horario, palabras_clave, fuente, verificado, fecha_verif, metodo_verif, permiso_tel.\n// horas: \"L 08:00-18:00|M 08:00-18:00|...\" (L M X J V S D). nombre \"\" = casilla vacía (no se muestra).\n";
-const rec=n=>({id:n.id,nombre:n.nombre||"",categoria:n.categoria||"",tipo:n.tipo||"",canal:n.canal||"",direccion:n.direccion||"",barrio:n.barrio||"",municipio:n.municipio||"",lat:has(n)?n.lat:null,lng:has(n)?n.lng:null,telefono:n.telefono||"",whatsapp:n.whatsapp||"",horas:n.horas||"",horario:n.horario||"",palabras_clave:n.palabras_clave||"",fuente:n.fuente||"",verificado:!!n.verificado,fecha_verif:n.fecha_verif||"",metodo_verif:n.metodo_verif||"",permiso_tel:!!n.permiso_tel});
+const HEADER="// INVENTARIO DE NEGOCIOS - MAPA COMERCIAL\n// ESTE ARCHIVO ES PÚBLICO: no pongas aquí datos privados ni teléfonos personales sin autorización.\n// Campos: id, nombre, categoria, tipo, canal, direccion, barrio, municipio, cobertura, lat, lng, telefono, whatsapp, horas, horario, palabras_clave, fuente, verificado, fecha_verif, metodo_verif, permiso_tel.\n// horas: \"L 08:00-18:00|M 08:00-18:00|...\" (L M X J V S D). nombre \"\" = casilla vacía (no se muestra).\n";
+const rec=n=>({id:n.id,nombre:n.nombre||"",categoria:n.categoria||"",tipo:n.tipo||"",canal:n.canal||"",direccion:n.direccion||"",barrio:n.barrio||"",municipio:n.municipio||"",lat:has(n)?n.lat:null,lng:has(n)?n.lng:null,telefono:n.telefono||"",whatsapp:n.whatsapp||"",horas:n.horas||"",horario:n.horario||"",cobertura:n.cobertura||"",palabras_clave:n.palabras_clave||"",fuente:n.fuente||"",verificado:!!n.verificado,fecha_verif:n.fecha_verif||"",metodo_verif:n.metodo_verif||"",permiso_tel:!!n.permiso_tel});
 const exportText=()=>HEADER+"const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(rec(n))).join(",\n")+"\n];\n";
 
 function render(){
   const q=norm($("search").value.trim());
   const passV=n=>vf==="pend"?!n.verificado:vf==="ver"?!!n.verificado:vf==="old"?vOld(n):vf==="noloc"?!has(n):true;
-  const passF=n=>(!fOpen||(openInfo(n)&&openInfo(n).open))&&(!fSun||sunOpen(n))&&(!fWho||n.canal==="Mayorista"||n.canal==="Ambos")&&(!muni||n.municipio===muni);
-  const f=named().filter(n=>matchQ(n,q)&&(!activeCat||n.categoria===activeCat)&&passV(n)&&passF(n));
-  if(userPos)f.sort((a,b)=>(has(a)?meters(userPos.lat,userPos.lng,a.lat,a.lng):1e12)-(has(b)?meters(userPos.lat,userPos.lng,b.lat,b.lng):1e12));
+  const passF=n=>(!fOpen||(openInfo(n)&&openInfo(n).open))&&(!fSun||sunOpen(n))&&(!fWho||n.canal==="Mayorista"||n.canal==="Ambos")&&(!muni||n.municipio===muni)&&(!grpSel||groupOf(n)===grpSel)&&(!mb||inBarrio(n,mb));
+  const toks=tokensOf($("search").value);
+  const base=named().filter(n=>(!activeCat||n.categoria===activeCat)&&passV(n)&&passF(n));
+  let f=base,parecidas=false;
+  if(toks.length){
+    const sc=new Map(base.map(n=>[n,scoreN(n,toks)]));
+    f=base.filter(n=>sc.get(n)===toks.length);
+    if(!f.length){f=base.filter(n=>sc.get(n)>0).sort((a,b)=>sc.get(b)-sc.get(a));parecidas=f.length>0}
+  }
+  if(userPos&&!parecidas)f.sort((a,b)=>(has(a)?meters(userPos.lat,userPos.lng,a.lat,a.lng):1e12)-(has(b)?meters(userPos.lat,userPos.lng,b.lat,b.lng):1e12));
   cluster.clearLayers();
   f.filter(has).forEach(n=>{
     const m=L.marker([n.lat,n.lng],{icon:mkIcon(n),title:n.nombre});
@@ -413,7 +520,7 @@ function render(){
     list.innerHTML='<div id="empty">No encontramos eso todavía. Prueba con otra palabra o quita algún filtro.'+((AV.url||EDITOR)?'<br><br><button class="btn" id="emptyav" type="button">➕ Avisar de un negocio</button>':"")+'</div>';
     if($("emptyav"))$("emptyav").onclick=avOpen;
   }
-  $("cnt").textContent=f.length?`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"";
+  $("cnt").textContent=f.length?(parecidas?"No hay coincidencia exacta; mostramos opciones parecidas. ":"")+`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"";
   $("more").style.display=f.length>lim?"block":"none";
   if(EDITOR){
     const all=named(),v=all.filter(n=>n.verificado).length;$("vcount").textContent="Verificados: "+v+" de "+all.length+(all.length?" ("+Math.round(100*v/all.length)+"%)":"");
@@ -441,7 +548,7 @@ map.on("click",e=>{
 });
 
 // ---- Formulario del editor ----
-const FS=["nombre","categoria","tipo","canal","direccion","barrio","municipio","telefono","whatsapp","palabras_clave","horario","lat","lng","fuente","fecha_verif","metodo_verif"];
+const FS=["nombre","categoria","tipo","canal","direccion","barrio","municipio","cobertura","telefono","whatsapp","palabras_clave","horario","lat","lng","fuente","fecha_verif","metodo_verif"];
 function buildHoursGrid(){
   const g=$("hgrid");g.innerHTML="";
   DK.forEach((k,i)=>{
@@ -487,7 +594,7 @@ function saveForm(){
     if(!fv)fv=today();
     if((d.telefono.trim()||d.whatsapp.trim())&&!d.permiso_tel&&!confirm("Hay teléfono o WhatsApp y no marcaste que sea un canal comercial público o autorizado. Si es personal, bórralo antes de guardar. ¿Guardar de todos modos?"))return;
   }else{fv="";mv=""}
-  saveEdit(n,{nombre:d.nombre.trim(),categoria:d.categoria.trim(),tipo:d.tipo,canal:d.canal,direccion:d.direccion.trim(),barrio:d.barrio.trim(),municipio:d.municipio.trim(),telefono:d.telefono.trim(),whatsapp:d.whatsapp.trim(),palabras_clave:d.palabras_clave.trim(),horas:d.horas,horario:d.horario.trim(),lat,lng,fuente:d.fuente.trim(),verificado:d.verificado,fecha_verif:fv,metodo_verif:mv,permiso_tel:!!d.permiso_tel});
+  saveEdit(n,{nombre:d.nombre.trim(),categoria:d.categoria.trim(),tipo:d.tipo,canal:d.canal,direccion:d.direccion.trim(),barrio:d.barrio.trim(),municipio:d.municipio.trim(),telefono:d.telefono.trim(),whatsapp:d.whatsapp.trim(),cobertura:d.cobertura.trim(),palabras_clave:d.palabras_clave.trim(),horas:d.horas,horario:d.horario.trim(),lat,lng,fuente:d.fuente.trim(),verificado:d.verificado,fecha_verif:fv,metodo_verif:mv,permiso_tel:!!d.permiso_tel});
   closeModal();editing=null;buildChips();render();
   if(has(n))show(n);
 }
@@ -514,14 +621,16 @@ $("more").onclick=()=>{lim+=30;render()};
 $("search").addEventListener("input",()=>{lim=30;render()});
 function toggleChip(id,get,set){const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle("on",get());lim=30;render()}}
 toggleChip("fopen",()=>fOpen,v=>fOpen=v);toggleChip("fsun",()=>fSun,v=>fSun=v);toggleChip("fwho",()=>fWho,v=>fWho=v);
-$("muni").onchange=()=>{muni=$("muni").value;lim=30;render()};
+$("muni").onchange=()=>{muni=$("muni").value;lim=30;render();const b=cluster.getBounds();if(muni&&b.isValid())map.fitBounds(b,{padding:[30,30]})};
+$("grpsel").onchange=()=>{grpSel=$("grpsel").value;lim=30;buildChips();render()};
+$("mibarrio").onchange=()=>{mb=$("mibarrio").value;lim=30;render()};
 buildHoursGrid();
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyMon({LV:["M","X","J","V"],LS:["M","X","J","V","S"],LD:["M","X","J","V","S","D"]}[b.dataset.copy]));
 
 // ---- Avisos ciudadanos ----
 const AV=(typeof AVISOS!=="undefined"&&AVISOS)||{url:"",campos:{}};
 const AVKEYS=["nombre","categoria","direccion","telefono","lat","lng","precision","metodo"];
-const AVCATS=["Tienda de barrio","Restaurante","Comida rápida","Panadería","Café","Farmacia","Ferretería","Llantería","Costurera","Carpintería","Mecánica","Peluquería","Papelería","Fruver","Carnicería","Ropa","Calzado","Tecnología","Servicios financieros","Otro"];
+const AVCATS=["Tienda de barrio","Restaurante","Comida rápida","Panadería","Café","Farmacia","Ferretería","Papelería","Peluquería","Ropa","Calzado","Reparación de electrodomésticos","Reparación de celulares","Electricista","Plomero","Costurera","Carpintería","Mecánica","Taller de motos","Llantería","Refuerzo escolar","Veterinaria","Odontología","Impresión y fotocopias","Otro"];
 const ENV_BOX={latMin:6.12,latMax:6.23,lngMin:-75.62,lngMax:-75.54};
 const LINK=/https?:|www\.|\.com\b|\.co\b|@/i;
 let av=null,amap=null,amark=null;
@@ -632,6 +741,69 @@ $("near").onclick=nearToggle;
 $("vfilter").onchange=()=>{vf=$("vfilter").value;lim=30;render()};
 if(CT.correo){const a=$("corr");a.href="mailto:"+encodeURIComponent(CT.correo)+"?subject="+encodeURIComponent("Corregir o retirar mi negocio")+"&body="+encodeURIComponent("Nombre del negocio:\nQuiero: corregir / retirar (borra lo que no aplique)\nDetalle:\n");a.style.display="inline"}
 
+
+// ---- Importar de OpenStreetMap (modo editor) ----
+const OSMCAT={restaurant:"Restaurante",fast_food:"Comida rápida",bar:"Bar",pub:"Bar",cafe:"Café",pharmacy:"Farmacia",dentist:"Odontología",clinic:"Consultorio médico",doctors:"Consultorio médico",veterinary:"Veterinaria",kindergarten:"Jardín infantil",bank:"Servicios financieros",chemist:"Droguería",shoes:"Calzado",clothes:"Ropa",supermarket:"Supermercado",convenience:"Tienda de barrio",kiosk:"Tienda de barrio",bakery:"Panadería",greengrocer:"Fruver",butcher:"Carnicería",stationery:"Papelería",books:"Librería",jewelry:"Joyería",optician:"Óptica",hardware:"Ferretería",doityourself:"Ferretería",variety_store:"Variedades",department_store:"Almacén",gift:"Regalos",bag:"Accesorios",fabric:"Mercería",sewing:"Mercería",haberdashery:"Mercería",mobile_phone:"Tecnología",electronics:"Tecnología",computer:"Tecnología",hairdresser:"Peluquería",beauty:"Belleza",nails:"Uñas",laundry:"Lavandería",dry_cleaning:"Lavandería",car_repair:"Mecánica",motorcycle_repair:"Taller de motos",bicycle:"Taller de bicicletas",tyres:"Llantería",copyshop:"Impresión y fotocopias",pet:"Tienda de mascotas",pet_grooming:"Peluquería canina",photo:"Fotografía",carpenter:"Carpintería",electrician:"Electricista",plumber:"Plomero",shoemaker:"Zapatería",tailor:"Costurera",dressmaker:"Costurera",painter:"Pintor",locksmith:"Cerrajería",photographer:"Fotografía",upholsterer:"Tapicería",glaziery:"Vidriería",glazier:"Vidriería"};
+const osmCat=t=>OSMCAT[t.amenity]||OSMCAT[t.shop]||OSMCAT[t.craft]||(t.shop?"Otro comercio":t.craft?"Otro oficio":t.amenity?"Otro servicio":"Por confirmar");
+function osmParse(txt){
+  const j=JSON.parse(txt),out=[];
+  if(Array.isArray(j.elements)){j.elements.forEach(e=>{const t=e.tags||{};out.push({t,lat:e.lat!=null?e.lat:(e.center&&e.center.lat),lng:e.lon!=null?e.lon:(e.center&&e.center.lon),osm:(e.type||"")+"/"+e.id})})}
+  else if(Array.isArray(j.features)){j.features.forEach(f=>{
+    const t=Object.assign({},f.properties&&f.properties.tags,f.properties),g=f.geometry;let lat,lng;
+    if(g){if(g.type==="Point"){lng=g.coordinates[0];lat=g.coordinates[1]}
+      else{const fl=a=>typeof a[0]==="number"?[a]:[].concat(...a.map(fl)),pts=fl(g.coordinates);if(pts.length){lng=pts.reduce((s,p)=>s+p[0],0)/pts.length;lat=pts.reduce((s,p)=>s+p[1],0)/pts.length}}}
+    out.push({t,lat,lng,osm:t["@id"]||f.id||""})})}
+  else throw new Error("Formato no reconocido");
+  return out;
+}
+function osmPlan(items,o){
+  const res={nuevos:[],sinNombre:0,sinCoord:0,fuera:0,existe:0,dup:0,total:items.length},seen=[],ex=named();
+  items.forEach(it=>{
+    const nm=String(it.t.name||"").trim();if(!nm){res.sinNombre++;return}
+    if(!Number.isFinite(it.lat)||!Number.isFinite(it.lng)){res.sinCoord++;return}
+    const lat=+(+it.lat).toFixed(6),lng=+(+it.lng).toFixed(6);
+    if(!(lat>ENV_BOX.latMin&&lat<ENV_BOX.latMax&&lng>ENV_BOX.lngMin&&lng<ENV_BOX.lngMax)){res.fuera++;return}
+    const b=norm(nm);
+    if(ex.some(n=>{const a=norm(n.nombre),sim=a===b||a.includes(b)||b.includes(a);return sim&&(has(n)?meters(lat,lng,n.lat,n.lng)<120:a===b)})){res.existe++;return}
+    if(seen.some(s=>s.b===b&&meters(lat,lng,s.lat,s.lng)<40)){res.dup++;return}
+    seen.push({b,lat,lng});
+    const t=it.t;
+    res.nuevos.push({nombre:nm,categoria:osmCat(t),direccion:[t["addr:street"],t["addr:housenumber"]].filter(Boolean).join(" # "),barrio:t["addr:suburb"]||t["addr:neighbourhood"]||"",municipio:o.municipio||"",lat,lng,telefono:o.tel?(t.phone||t["contact:phone"]||""):"",fuente:"OpenStreetMap"+(it.osm?" ("+it.osm+")":"")});
+  });
+  return res;
+}
+function osmApply(plan){
+  plan.nuevos.forEach(f=>{
+    const n=freeSlot();
+    const fields=Object.assign({tipo:"",canal:"",horas:"",horario:"",cobertura:"",palabras_clave:"",whatsapp:"",verificado:false,fecha_verif:"",metodo_verif:"",permiso_tel:false},f);
+    edits[n.id]=Object.assign(edits[n.id]||{},fields);Object.assign(n,fields);
+  });
+  persist();buildChips();render();
+}
+let impPlan=null;
+function closeImp(){$("imodal").style.display="none"}
+if(EDITOR){
+  $("eimp").onclick=()=>{$("imodal").style.display="block";$("imodal").scrollTop=0;$("ires").textContent="";impPlan=null;$("iimp").disabled=true;$("iimp").style.opacity=".5"};
+  $("ix").onclick=closeImp;
+  $("icq").onclick=()=>{$("iq").select();try{navigator.clipboard.writeText($("iq").value)}catch(_){}};
+  $("ifile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("itxt").value=r.result};r.readAsText(f)};
+  $("ian").onclick=()=>{
+    let items;try{items=osmParse($("itxt").value.trim())}catch(e){alert("No pude leer los datos: "+e.message+". Debe ser el JSON o GeoJSON exportado de Overpass Turbo.");return}
+    impPlan=osmPlan(items,{municipio:$("imun").value.trim(),tel:$("itel").checked});
+    const p=impPlan,ej=p.nuevos.slice(0,8).map(n=>esc(n.nombre)+" <i>("+esc(n.categoria)+")</i>").join("<br>");
+    $("ires").innerHTML="Elementos leídos: <b>"+p.total+"</b><br>Nuevos para importar: <b>"+p.nuevos.length+"</b><br>Ya estaban en tu mapa: <b>"+p.existe+"</b> · repetidos: <b>"+p.dup+"</b><br>Omitidos sin nombre: <b>"+p.sinNombre+"</b> · sin coordenadas: <b>"+p.sinCoord+"</b> · fuera del Valle: <b>"+p.fuera+"</b>"+(ej?"<br><br><b>Ejemplos:</b><br>"+ej:"");
+    const ok=p.nuevos.length>0;$("iimp").disabled=!ok;$("iimp").style.opacity=ok?"1":".5";
+    $("iimp").textContent=ok?"Importar "+p.nuevos.length+" negocios":"Importar";
+  };
+  $("iimp").onclick=()=>{
+    if(!impPlan||!impPlan.nuevos.length)return;
+    if(!confirm("Se agregarán "+impPlan.nuevos.length+" negocios como «sin verificar». ¿Continuar?"))return;
+    const n=impPlan.nuevos.length;osmApply(impPlan);impPlan=null;closeImp();
+    const b=cluster.getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]});
+    alert("Importados "+n+" negocios. Revísalos con los filtros «Pendientes de verificar» y «Mi barrio», y exporta pronto (Copiar negocios.js) para no perder el trabajo.");
+  };
+}
+
 // ---- Modo editor ----
 if(EDITOR){
   $("ebar").style.display="block";$("export").style.display="block";$("avcfg").style.display="block";
@@ -645,7 +817,7 @@ if(EDITOR){
   $("fdel").onclick=()=>{
     if(!editing.n.nombre){closeModal();editing=null;return}
     if(!confirm("¿Vaciar esta casilla? El negocio dejará de mostrarse."))return;
-    saveEdit(editing.n,{nombre:"",categoria:"",tipo:"",canal:"",direccion:"",barrio:"",municipio:"",telefono:"",whatsapp:"",horas:"",horario:"",palabras_clave:"",lat:null,lng:null,fuente:"",verificado:false,fecha_verif:"",metodo_verif:"",permiso_tel:false});
+    saveEdit(editing.n,{nombre:"",categoria:"",tipo:"",canal:"",direccion:"",barrio:"",municipio:"",telefono:"",whatsapp:"",horas:"",horario:"",cobertura:"",palabras_clave:"",lat:null,lng:null,fuente:"",verificado:false,fecha_verif:"",metodo_verif:"",permiso_tel:false});
     closeModal();editing=null;buildChips();render();
   };
   $("ecopy").onclick=()=>{const t=$("exp");t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert("Copiado. Ahora pégalo en negocios.js en GitHub."),()=>alert("Texto seleccionado: usa Copiar del teléfono."))}catch(_){alert("Texto seleccionado: usa Copiar del teléfono.")}};
