@@ -102,6 +102,7 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
   <button class="btn o" id="eexp" type="button">Exportar</button>
   <button class="btn o" id="epaste" type="button">Pegar aviso</button>
   <button class="btn o" id="eimp" type="button">📥 Importar OSM</button>
+  <button class="btn o" id="emuni" type="button">🏷️ Municipio a vacíos</button>
 </div>
 
 <div class="top">
@@ -200,20 +201,16 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
   <button id="ix" type="button" aria-label="Cerrar">×</button>
   <h3>📥 Importar negocios de OpenStreetMap</h3>
   <p class="hint">Trae negocios con nombre y ubicación desde datos abiertos. Quedan como «sin verificar».</p>
-  <label>1. Consulta para overpass-turbo.eu (centro de Itagüí, área aproximada)</label>
-  <textarea id="iq" readonly>[out:json][timeout:60];
-(
-  nwr["shop"](6.176,-75.608,6.194,-75.590);
-  nwr["amenity"~"restaurant|fast_food|bar|cafe|pharmacy|bank|dentist|clinic|doctors|veterinary|kindergarten"](6.176,-75.608,6.194,-75.590);
-  nwr["craft"](6.176,-75.608,6.194,-75.590);
-);
-out center tags;</textarea>
+  <label>1. Municipio<input type="text" id="imun" value="Itagüí" autocomplete="off"></label>
+  <div class="btns"><button class="btn o" id="iqgen" type="button">Consulta del centro</button><button class="btn o" id="iqall" type="button">Consulta de todo el municipio</button></div>
+  <p class="hint" id="iqnote"></p>
+  <label>2. Consulta para overpass-turbo.eu (puedes editarla)</label>
+  <textarea id="iq"></textarea>
   <div class="btns"><button class="btn o" id="icq" type="button">Copiar consulta</button></div>
-  <p class="hint">En Overpass Turbo pega la consulta, pulsa <b>Run</b> (Ejecutar), y en <b>Export</b> copia o descarga los datos (JSON o GeoJSON). Ajusta el rectángulo en el mapa si quieres otra zona.</p>
-  <label>2. Carga el archivo o pega los datos</label>
+  <p class="hint">En Overpass Turbo pega la consulta, pulsa <b>Run</b> (Ejecutar), mira el mapa y ajusta el rectángulo si hace falta. Luego, en <b>Export</b>, copia o descarga los datos (JSON o GeoJSON).</p>
+  <label>3. Carga el archivo o pega los datos</label>
   <input type="file" id="ifile" accept=".json,.geojson,.txt,application/json" style="width:100%;padding:8px 0;font-size:15px">
   <textarea id="itxt" placeholder='{"elements":[...]}'></textarea>
-  <label>Municipio de estos negocios<input type="text" id="imun" value="Itagüí" autocomplete="off"></label>
   <label style="display:flex;gap:8px;align-items:flex-start;color:#1f2430"><input type="checkbox" id="itel" style="margin-top:3px"> Importar también los teléfonos de OpenStreetMap (déjalo desmarcado si no estás seguro de que sean comerciales)</label>
   <div class="btns"><button class="btn" id="ian" type="button">Analizar</button><button class="btn" id="iimp" type="button" disabled style="opacity:.5">Importar</button></div>
   <div id="ires"></div>
@@ -631,7 +628,7 @@ document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyMon({LV:["
 const AV=(typeof AVISOS!=="undefined"&&AVISOS)||{url:"",campos:{}};
 const AVKEYS=["nombre","categoria","direccion","telefono","lat","lng","precision","metodo"];
 const AVCATS=["Tienda de barrio","Restaurante","Comida rápida","Panadería","Café","Farmacia","Ferretería","Papelería","Peluquería","Ropa","Calzado","Reparación de electrodomésticos","Reparación de celulares","Electricista","Plomero","Costurera","Carpintería","Mecánica","Taller de motos","Llantería","Refuerzo escolar","Veterinaria","Odontología","Impresión y fotocopias","Otro"];
-const ENV_BOX={latMin:6.12,latMax:6.23,lngMin:-75.62,lngMax:-75.54};
+const ENV_BOX={latMin:6.05,latMax:6.50,lngMin:-75.72,lngMax:-75.28};
 const LINK=/https?:|www\.|\.com\b|\.co\b|@/i;
 let av=null,amap=null,amark=null;
 const avMsg=t=>{$("avgpsmsg").textContent=t};
@@ -780,10 +777,34 @@ function osmApply(plan){
   });
   persist();buildChips();render();
 }
+const MUNIC={"itagui":[6.1846,-75.5991],"envigado":[6.1736,-75.5865],"sabaneta":[6.1515,-75.6166],"la estrella":[6.1574,-75.6430],"caldas":[6.0910,-75.6361],"medellin":[6.2518,-75.5636],"bello":[6.3373,-75.5579],"copacabana":[6.3463,-75.5086],"girardota":[6.3772,-75.4455],"barbosa":[6.4388,-75.3318]};
+function buildQuery(mun,all){
+  const nm=String(mun||"").trim()||"Itagüí",c=MUNIC[norm(nm)];
+  const am="restaurant|fast_food|bar|cafe|pharmacy|bank|dentist|clinic|doctors|veterinary|kindergarten";
+  const filt=a=>'  nwr["shop"]'+a+';\n  nwr["amenity"~"'+am+'"]'+a+';\n  nwr["craft"]'+a+';';
+  if(!all&&c){const d=0.009,a="("+(c[0]-d).toFixed(3)+","+(c[1]-d).toFixed(3)+","+(c[0]+d).toFixed(3)+","+(c[1]+d).toFixed(3)+")";
+    return '[out:json][timeout:60];\n(\n'+filt(a)+'\n);\nout center tags;'}
+  return '[out:json][timeout:120];\n{{geocodeArea:'+nm+', Antioquia, Colombia}}->.a;\n(\n'+filt("(area.a)")+'\n);\nout center tags;';
+}
+function setQuery(all){
+  const nm=$("imun").value.trim(),c=MUNIC[norm(nm)];
+  $("iq").value=buildQuery(nm,all);
+  $("iqnote").textContent=all?"Esta consulta usa el límite oficial del municipio: puede traer muchísimos resultados y tardar. En Medellín conviene usar rectángulos por zonas.":
+    (c?"Rectángulo de unos 2 km alrededor del centro de "+nm+" (aproximado: verifícalo en el mapa de Overpass Turbo).":"No tengo el centro de «"+nm+"», así que usé todo el municipio. Revisa que el nombre esté bien escrito.");
+}
 let impPlan=null;
 function closeImp(){$("imodal").style.display="none"}
 if(EDITOR){
-  $("eimp").onclick=()=>{$("imodal").style.display="block";$("imodal").scrollTop=0;$("ires").textContent="";impPlan=null;$("iimp").disabled=true;$("iimp").style.opacity=".5"};
+  $("emuni").onclick=()=>{
+    const m=prompt("¿Qué municipio asignar a todos los negocios que todavía no tienen municipio?","Envigado");if(!m||!m.trim())return;
+    const mm=m.trim(),t=named().filter(n=>!n.municipio);
+    if(!t.length){alert("Todos los negocios ya tienen municipio.");return}
+    if(!confirm("Se asignará «"+mm+"» a "+t.length+" negocios sin municipio. ¿Continuar?"))return;
+    t.forEach(n=>{edits[n.id]=Object.assign(edits[n.id]||{},{municipio:mm});n.municipio=mm});
+    persist();buildChips();render();alert("Listo: "+t.length+" negocios actualizados. Exporta para guardarlo en GitHub.");
+  };
+  $("iqgen").onclick=()=>setQuery(false);$("iqall").onclick=()=>setQuery(true);
+  $("eimp").onclick=()=>{if(!$("iq").value)setQuery(false);$("imodal").style.display="block";$("imodal").scrollTop=0;$("ires").textContent="";impPlan=null;$("iimp").disabled=true;$("iimp").style.opacity=".5"};
   $("ix").onclick=closeImp;
   $("icq").onclick=()=>{$("iq").select();try{navigator.clipboard.writeText($("iq").value)}catch(_){}};
   $("ifile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("itxt").value=r.result};r.readAsText(f)};
