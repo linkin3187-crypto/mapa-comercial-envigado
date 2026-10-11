@@ -13,12 +13,14 @@ html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1f2430;background:#f5f6f8;line-height:1.4}
 header{padding:14px 16px;background:#fff;border-bottom:1px solid #e2e5ea}
 header h1{margin:0;font-size:21px}header p{margin:3px 0 0;color:#667085;font-size:14px}
+#ebar{display:none;padding:10px 12px;background:#fef3c7;color:#92400e;font-size:13px}
+#ebar .btn{margin:6px 6px 0 0}
 .top{position:sticky;top:0;z-index:1200;background:#fff;padding:10px 12px;border-bottom:1px solid #e2e5ea}
 input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1d9;border-radius:10px;background:#fff}
 #chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
 .chip{flex:0 0 auto;padding:7px 12px;border:1px solid #cbd1d9;border-radius:999px;background:#fff;font-size:14px;cursor:pointer;white-space:nowrap}
 .chip.on{background:#0f766e;border-color:#0f766e;color:#fff}
-#msg{display:none;padding:10px 14px;background:#e0f2fe;font-size:14px}
+#msg{display:none;padding:10px 14px;background:#e0f2fe;font-size:14px;position:sticky;top:0;z-index:1300}
 #mapwrap{position:relative}
 #map{height:62vh;min-height:360px;width:100%}#map.picking{cursor:crosshair}
 #fit{position:absolute;top:10px;right:10px;z-index:1000;padding:9px 12px;border:0;border-radius:8px;background:#fff;box-shadow:0 1px 5px #0004;font-size:13px;cursor:pointer}
@@ -29,7 +31,7 @@ input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1
 #sx{position:absolute;top:8px;right:10px;border:0;background:none;font-size:22px;cursor:pointer;color:#667085}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .btn{display:inline-block;padding:9px 12px;border-radius:8px;border:1px solid #0f766e;background:#0f766e;color:#fff;font-size:14px;text-decoration:none;cursor:pointer}
-.btn.o{background:#fff;color:#0f766e}
+.btn.o{background:#fff;color:#0f766e}.btn.r{background:#fff;color:#b91c1c;border-color:#b91c1c}
 #results{padding:14px;max-width:900px;margin:0 auto}
 #results h2{margin:0 0 4px;font-size:18px}#cnt{font-size:13px;color:#667085;margin:0 0 8px}
 .business{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:13px;margin-bottom:10px}
@@ -37,12 +39,30 @@ input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1
 .badge{display:inline-block;margin-top:5px;padding:3px 8px;border-radius:5px;background:#fef3c7;color:#92400e;font-size:12px}
 .badge.ok{background:#e6f4f1;color:#0f766e}
 #more{width:100%;padding:12px;border:1px solid #0f766e;background:#fff;color:#0f766e;border-radius:10px;font-size:15px;cursor:pointer}
-textarea{width:100%;height:160px;font-size:13px}
-footer{padding:14px;font-size:12px;color:#667085;text-align:center}
+#export{display:none;margin-top:16px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px}
+#export h3{margin:0 0 6px;font-size:16px}#export ol{padding-left:20px;font-size:14px;margin:6px 0}
+textarea{width:100%;height:150px;font-size:13px}
+footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{color:#667085}
+#modal{display:none;position:fixed;inset:0;z-index:2000;background:#0008;overflow-y:auto;padding:12px}
+#form{background:#fff;max-width:520px;margin:10px auto 40px;border-radius:14px;padding:16px}
+#form h3{margin:0 0 4px;font-size:18px}
+#form label{display:block;font-size:13px;color:#475467;margin-top:10px}
+#form input[type=text]{width:100%;padding:10px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px}
+#form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#form .chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px;color:#1f2430}
+.hint{font-size:12px;color:#667085;margin:3px 0 0}
 </style>
 </head>
 <body>
 <header><h1>Mapa Comercial Envigado</h1><p>Descubre los negocios del centro de Envigado.</p></header>
+
+<div id="ebar">
+  <b>✏️ Modo editor.</b> Los cambios se guardan solo en este navegador hasta que exportes y los pegues en GitHub.
+  <span id="ecount"></span><br>
+  <button class="btn" id="eadd" type="button">+ Agregar negocio</button>
+  <button class="btn o" id="eexp" type="button">Exportar</button>
+</div>
+
 <div class="top">
   <input id="search" type="search" placeholder="Buscar por nombre o dirección…" aria-label="Buscar un negocio">
   <div id="chips" role="group" aria-label="Filtrar por categoría"></div>
@@ -53,18 +73,58 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}
   <button id="fit" type="button">Ver todos</button>
   <div id="sheet" role="dialog" aria-live="polite"></div>
 </div>
+
 <section id="results">
   <h2>Negocios</h2><p id="cnt"></p>
   <div id="business-list"></div>
   <button id="more" type="button" style="display:none">Mostrar más</button>
-  <details style="margin-top:16px"><summary>Exportar datos para negocios.js</summary><textarea id="exp" readonly></textarea></details>
+  <div id="export">
+    <h3>Exportar negocios.js</h3>
+    <ol>
+      <li>Pulsa <b>Copiar negocios.js</b>.</li>
+      <li>En GitHub abre <b>negocios.js</b> → lápiz (Edit) → selecciona todo, borra y pega.</li>
+      <li>Pulsa <b>Commit changes</b> y espera 1–2 minutos.</li>
+      <li>Vuelve aquí y pulsa <b>Borrar cambios locales</b>.</li>
+    </ol>
+    <textarea id="exp" readonly></textarea>
+    <div class="btns"><button class="btn" id="ecopy" type="button">Copiar negocios.js</button><button class="btn r" id="eclear" type="button">Borrar cambios locales</button></div>
+  </div>
 </section>
-<footer>Información pendiente de verificación. Mapa © OpenStreetMap contributors.</footer>
+
+<div id="modal"><div id="form">
+  <h3 id="ftitle">Editar negocio</h3><p class="hint" id="fid"></p>
+  <label>Nombre del negocio *<input type="text" id="f-nombre" autocomplete="off"></label>
+  <label>Categoría<input type="text" id="f-categoria" list="cats" autocomplete="off"></label>
+  <datalist id="cats"></datalist>
+  <label>Dirección<input type="text" id="f-direccion" placeholder="Calle 38 Sur # 42-10" autocomplete="off"></label>
+  <div class="two">
+    <label>Teléfono<input type="text" id="f-telefono" inputmode="tel" placeholder="604 000 0000" autocomplete="off"></label>
+    <label>WhatsApp<input type="text" id="f-whatsapp" inputmode="tel" placeholder="300 123 4567" autocomplete="off"></label>
+  </div>
+  <p class="hint">WhatsApp: celular de 10 dígitos que empiece por 3. Si lo dejas vacío, se usa el teléfono cuando sea celular.</p>
+  <label>Horario<input type="text" id="f-horario" placeholder="Lun-Sáb 8am-6pm" autocomplete="off"></label>
+  <div class="two">
+    <label>Latitud<input type="text" id="f-lat" inputmode="decimal" placeholder="6.1738" autocomplete="off"></label>
+    <label>Longitud<input type="text" id="f-lng" inputmode="decimal" placeholder="-75.5861" autocomplete="off"></label>
+  </div>
+  <div class="btns" style="margin-top:6px"><button class="btn o" id="fpick" type="button">📍 Tomar del mapa</button></div>
+  <label>Fuente del dato<input type="text" id="f-fuente" placeholder="Visita en campo, Comerciante, OpenStreetMap…" autocomplete="off"></label>
+  <label class="chk"><input type="checkbox" id="f-ver"> Verificado (confirmé nombre, dirección y ubicación)</label>
+  <div class="btns" style="margin-top:14px">
+    <button class="btn" id="fsave" type="button">Guardar</button>
+    <button class="btn o" id="fcancel" type="button">Cancelar</button>
+    <button class="btn r" id="fdel" type="button">Vaciar casilla</button>
+  </div>
+</div></div>
+
+<footer>Información pendiente de verificación. Mapa © OpenStreetMap contributors.<br>
+<a id="elink" href="?editar=1">Modo editor</a></footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="negocios.js"></script>
 <script>
+const EDITOR=/[?&]editar/.test(location.search);
 const ICON={"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Bar":["🍺","#7c3aed"],"Café":["☕","#92400e"],"Calzado":["👟","#2563eb"],"Ropa":["👕","#db2777"],"Mercería":["🧵","#c026d3"],"Servicios financieros":["🏦","#0369a1"],"Salud":["🩺","#0d9488"],"Belleza":["💇","#e11d48"],"Tecnología":["📱","#4f46e5"],"Supermercado":["🛒","#65a30d"],"Tienda":["🏪","#ca8a04"],"Panadería":["🥖","#b45309"],"Papelería":["✏️","#0891b2"],"Librería":["📚","#7e22ce"],"Carnicería":["🥩","#b91c1c"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Ferretería":["🔧","#475569"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"]};
 const iconOf=c=>ICON[c]||["📍","#475569"];
 const $=id=>document.getElementById(id);
@@ -73,17 +133,23 @@ const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u03
 const has=n=>Number.isFinite(n.lat)&&Number.isFinite(n.lng);
 const estadoDe=n=>n.verificado?"Verificado":(has(n)?"Ubicado, sin verificar":"Pendiente de ubicación");
 
-// Coordenadas guardadas en el navegador (se combinan con negocios.js)
+// ---- Datos: negocios.js + ubicaciones antiguas + cambios del editor ----
 let saved={};try{saved=JSON.parse(localStorage.getItem("env-loc")||"{}")}catch(e){}
+let edits={};try{edits=JSON.parse(localStorage.getItem("env-edits")||"{}")}catch(e){}
 negocios.forEach(n=>{if(saved[n.id]&&!has(n)){n.lat=saved[n.id].lat;n.lng=saved[n.id].lng}});
+negocios.forEach(n=>{if(edits[n.id])Object.assign(n,edits[n.id])});
+Object.keys(edits).forEach(id=>{if(!negocios.some(x=>x.id===id))negocios.push(Object.assign({id},edits[id]))});
+function persist(){try{localStorage.setItem("env-edits",JSON.stringify(edits))}catch(e){alert("No pude guardar en este navegador. Exporta tus cambios pronto.")}}
+function saveEdit(n,fields){edits[n.id]=Object.assign(edits[n.id]||{},fields);Object.assign(n,fields);persist()}
 
-// Teléfono y WhatsApp
+// ---- Teléfono y WhatsApp ----
 const firstPhone=t=>String(t||"").split(/[\/,;]| y /)[0];
 const telDigits=t=>firstPhone(t).replace(/[^\d+]/g,"");
-const waNumber=t=>{const d=firstPhone(t).replace(/\D/g,"");
+const waFrom=t=>{const d=firstPhone(t).replace(/\D/g,"");
   if(d.length===10&&d[0]==="3")return "57"+d;
   if(d.length===12&&d.startsWith("573"))return d;
   return "";};
+const waNumber=n=>waFrom(n.whatsapp)||waFrom(n.telefono);
 const dirUrl=n=>"https://www.google.com/maps/dir/?api=1&destination="+n.lat+","+n.lng+"&travelmode=walking";
 
 function actions(n,inSheet){
@@ -91,10 +157,13 @@ function actions(n,inSheet){
   if(has(n))h+=`<a class="btn" target="_blank" rel="noopener" href="${dirUrl(n)}">🧭 Cómo llegar</a>`;
   const t=telDigits(n.telefono);
   if(t)h+=`<a class="btn o" href="tel:${esc(t)}">📞 Llamar</a>`;
-  const w=waNumber(n.telefono);
+  const w=waNumber(n);
   if(w)h+=`<a class="btn o" target="_blank" rel="noopener" href="https://wa.me/${w}">💬 WhatsApp</a>`;
   if(!inSheet&&has(n))h+=`<button class="btn o" data-act="see" data-id="${esc(n.id)}">🗺️ Ver en mapa</button>`;
-  h+=`<button class="btn o" data-act="pick" data-id="${esc(n.id)}">${has(n)?"✏️ Mover":"📍 Ubicar en el mapa"}</button>`;
+  if(EDITOR){
+    h+=`<button class="btn o" data-act="edit" data-id="${esc(n.id)}">✏️ Editar</button>`;
+    h+=`<button class="btn o" data-act="pick" data-id="${esc(n.id)}">${has(n)?"📍 Mover":"📍 Ubicar"}</button>`;
+  }
   return h;
 }
 function info(n){
@@ -102,44 +171,49 @@ function info(n){
   return `<p>${ic[0]} ${esc(n.categoria||"Sin categoría")}</p>`+
     (n.direccion?`<p>📍 ${esc(n.direccion)}</p>`:"")+
     (n.telefono?`<p>📞 ${esc(n.telefono)}</p>`:"")+
+    (n.whatsapp?`<p>💬 ${esc(n.whatsapp)}</p>`:"")+
     (n.horario?`<p>🕒 ${esc(n.horario)}</p>`:"")+
     `<span class="badge ${n.verificado?"ok":""}">${esc(estadoDe(n))}</span>`;
 }
 
-// Mapa
+// ---- Mapa ----
 const map=L.map("map").setView([6.1736,-75.5865],17);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
 const cluster=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45}).addTo(map);
-const markerById={};
-const sheet=$("sheet");
-L.DomEvent.disableClickPropagation(sheet);
+const sheet=$("sheet");L.DomEvent.disableClickPropagation(sheet);
 function openSheet(n){
   sheet.innerHTML=`<button id="sx" aria-label="Cerrar">×</button><h3>${esc(n.nombre)}</h3>${info(n)}<div class="btns">${actions(n,true)}</div>`;
-  sheet.style.display="block";
-  $("sx").onclick=closeSheet;
+  sheet.style.display="block";$("sx").onclick=closeSheet;
 }
 function closeSheet(){sheet.style.display="none"}
 function mkIcon(n){const ic=iconOf(n.categoria);
   return L.divIcon({className:"",html:`<div class="pin" style="background:${ic[1]}"><span>${ic[0]}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});}
 
-// Estado
-let activeCat="",lim=30,picking=null;
+// ---- Lista y filtros ----
+let activeCat="",lim=30,picking=null,editing=null;
 const named=()=>negocios.filter(n=>n.nombre&&n.nombre.trim());
 function buildChips(){
   const cats=[...new Set(named().map(n=>n.categoria).filter(Boolean))].sort();
+  if(activeCat&&!cats.includes(activeCat))activeCat="";
   const box=$("chips");box.innerHTML="";
   [["","Todos"]].concat(cats.map(c=>[c,iconOf(c)[0]+" "+c])).forEach(([v,t])=>{
     const b=document.createElement("button");b.type="button";b.className="chip"+(activeCat===v?" on":"");b.textContent=t;
     b.onclick=()=>{activeCat=v;lim=30;buildChips();render()};box.appendChild(b);
   });
+  const all=[...new Set(Object.keys(ICON).concat(cats))].sort();
+  $("cats").innerHTML=all.map(c=>`<option value="${esc(c)}">`).join("");
 }
+const HEADER="// INVENTARIO DE NEGOCIOS - MAPA COMERCIAL ENVIGADO\n// Campos: id, nombre, categoria, direccion, lat, lng, telefono, whatsapp, horario, fuente, verificado.\n// nombre \"\" = casilla vacía (no se muestra). Cada negocio es una línea; no borres comas ni comillas.\n";
+const rec=n=>({id:n.id,nombre:n.nombre||"",categoria:n.categoria||"",direccion:n.direccion||"",lat:has(n)?n.lat:null,lng:has(n)?n.lng:null,telefono:n.telefono||"",whatsapp:n.whatsapp||"",horario:n.horario||"",fuente:n.fuente||"",verificado:!!n.verificado});
+const exportText=()=>HEADER+"const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(rec(n))).join(",\n")+"\n];\n";
+
 function render(){
   const q=norm($("search").value.trim());
   const f=named().filter(n=>norm(n.nombre+" "+(n.direccion||"")).includes(q)&&(!activeCat||n.categoria===activeCat));
-  cluster.clearLayers();Object.keys(markerById).forEach(k=>delete markerById[k]);
+  cluster.clearLayers();
   f.filter(has).forEach(n=>{
     const m=L.marker([n.lat,n.lng],{icon:mkIcon(n),title:n.nombre});
-    m.on("click",()=>openSheet(n));cluster.addLayer(m);markerById[n.id]=m;
+    m.on("click",()=>openSheet(n));cluster.addLayer(m);
   });
   const list=$("business-list");list.innerHTML="";
   f.slice(0,lim).forEach(n=>{
@@ -149,34 +223,88 @@ function render(){
   });
   $("cnt").textContent=f.length?`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"No se encontraron negocios.";
   $("more").style.display=f.length>lim?"block":"none";
-  $("exp").value="const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(n)).join(",\n")+"\n];";
+  if(EDITOR){$("exp").value=exportText();$("ecount").textContent=" Cambios locales: "+Object.keys(edits).length+"."}
 }
 function show(n){
   if(!has(n))return;
   window.scrollTo({top:0,behavior:"smooth"});
   map.setView([n.lat,n.lng],18);openSheet(n);
 }
-function startPick(n){
-  picking=n;closeSheet();
-  $("msg").style.display="block";$("msg").textContent="Toca en el mapa el lugar exacto de «"+n.nombre+"».";
+
+// ---- Ubicar en el mapa ----
+function startPick(n,back){
+  picking={n,back};closeSheet();closeModal();
+  $("msg").style.display="block";$("msg").textContent="Toca en el mapa el lugar exacto de «"+(n.nombre||n.id)+"».";
   $("map").classList.add("picking");window.scrollTo({top:0,behavior:"smooth"});
 }
+map.on("click",e=>{
+  if(!picking){closeSheet();return}
+  const lat=+e.latlng.lat.toFixed(6),lng=+e.latlng.lng.toFixed(6),{n,back}=picking;
+  picking=null;$("msg").style.display="none";$("map").classList.remove("picking");
+  if(back&&editing){editing.draft.lat=String(lat);editing.draft.lng=String(lng);openModal(editing.n,editing.draft)}
+  else{saveEdit(n,{lat,lng});render();openSheet(n)}
+});
+
+// ---- Formulario del editor ----
+const FS=["nombre","categoria","direccion","telefono","whatsapp","horario","lat","lng","fuente"];
+function draftOf(n){const d={};FS.forEach(k=>d[k]=n[k]==null?"":String(n[k]));d.verificado=!!n.verificado;return d}
+function readForm(){const d={};FS.forEach(k=>d[k]=$("f-"+k).value);d.verificado=$("f-ver").checked;return d}
+function openModal(n,draft){
+  editing={n,draft:draft||draftOf(n)};
+  FS.forEach(k=>$("f-"+k).value=editing.draft[k]);$("f-ver").checked=editing.draft.verificado;
+  $("fid").textContent=n.id+(n.nombre?"":" · casilla vacía");
+  $("ftitle").textContent=n.nombre?"Editar negocio":"Nuevo negocio";
+  $("modal").style.display="block";$("modal").scrollTop=0;
+}
+function closeModal(){$("modal").style.display="none"}
+function saveForm(){
+  const d=readForm(),n=editing.n;
+  if(!d.nombre.trim()){alert("Escribe el nombre del negocio. Para dejar la casilla vacía usa «Vaciar casilla».");return}
+  let lat=null,lng=null;const a=d.lat.trim().replace(",","."),b=d.lng.trim().replace(",",".");
+  if(a||b){
+    lat=parseFloat(a);lng=parseFloat(b);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)){alert("Latitud y longitud deben ser números, por ejemplo 6.1738 y -75.5861. Ambas o ninguna.");return}
+    if(!(lat>5.5&&lat<6.8&&lng>-76.2&&lng<-75)&&!confirm("Estas coordenadas quedan lejos de Envigado. ¿Seguro que están bien? (En Envigado la latitud es ~6.17 y la longitud ~-75.58, con signo negativo.)"))return;
+  }
+  saveEdit(n,{nombre:d.nombre.trim(),categoria:d.categoria.trim(),direccion:d.direccion.trim(),telefono:d.telefono.trim(),whatsapp:d.whatsapp.trim(),horario:d.horario.trim(),lat,lng,fuente:d.fuente.trim(),verificado:d.verificado});
+  closeModal();editing=null;buildChips();render();
+  if(has(n))show(n);
+}
+function newSlot(){
+  let n=negocios.find(x=>!(x.nombre&&x.nombre.trim()));
+  if(!n){const max=Math.max(0,...negocios.map(x=>parseInt(String(x.id).replace(/\D/g,""))||0));n={id:"ENV-"+String(max+1).padStart(3,"0"),nombre:"",categoria:"",direccion:"",lat:null,lng:null,telefono:"",whatsapp:"",horario:"",fuente:"",verificado:false};negocios.push(n)}
+  openModal(n);
+}
+
+// ---- Eventos ----
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const n=negocios.find(x=>x.id===b.dataset.id);if(!n)return;
-  if(b.dataset.act==="pick")startPick(n);else if(b.dataset.act==="see")show(n);
-});
-map.on("click",e=>{
-  if(!picking){closeSheet();return}
-  picking.lat=+e.latlng.lat.toFixed(6);picking.lng=+e.latlng.lng.toFixed(6);
-  saved[picking.id]={lat:picking.lat,lng:picking.lng};
-  try{localStorage.setItem("env-loc",JSON.stringify(saved))}catch(_){}
-  const n=picking;picking=null;$("msg").style.display="none";$("map").classList.remove("picking");
-  render();openSheet(n);
+  if(b.dataset.act==="pick")startPick(n,false);
+  else if(b.dataset.act==="see")show(n);
+  else if(b.dataset.act==="edit"){closeSheet();openModal(n)}
 });
 $("fit").onclick=()=>{const b=cluster.getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]});else map.setView([6.1736,-75.5865],17)};
 $("more").onclick=()=>{lim+=30;render()};
 $("search").addEventListener("input",()=>{lim=30;render()});
+
+if(EDITOR){
+  $("ebar").style.display="block";$("export").style.display="block";
+  $("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
+  $("eadd").onclick=newSlot;
+  $("eexp").onclick=()=>$("export").scrollIntoView({behavior:"smooth"});
+  $("fsave").onclick=saveForm;
+  $("fcancel").onclick=()=>{closeModal();editing=null};
+  $("fpick").onclick=()=>{editing.draft=readForm();startPick(editing.n,true)};
+  $("fdel").onclick=()=>{
+    if(!editing.n.nombre){closeModal();editing=null;return}
+    if(!confirm("¿Vaciar esta casilla? El negocio dejará de mostrarse."))return;
+    saveEdit(editing.n,{nombre:"",categoria:"",direccion:"",telefono:"",whatsapp:"",horario:"",lat:null,lng:null,fuente:"",verificado:false});
+    closeModal();editing=null;buildChips();render();
+  };
+  $("ecopy").onclick=()=>{const t=$("exp");t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert("Copiado. Ahora pégalo en negocios.js en GitHub."),()=>alert("Texto seleccionado: usa Copiar del teléfono."))}catch(_){alert("Texto seleccionado: usa Copiar del teléfono.")}};
+  $("eclear").onclick=()=>{if(confirm("Solo borra esto DESPUÉS de haber pegado el negocios.js exportado en GitHub y de que la página se haya actualizado. ¿Borrar los cambios locales?")){edits={};saved={};try{localStorage.removeItem("env-edits");localStorage.removeItem("env-loc")}catch(_){}location.reload()}};
+}
 buildChips();render();
 </script>
 </body>
