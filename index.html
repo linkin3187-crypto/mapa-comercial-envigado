@@ -51,16 +51,34 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
 #form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #form .chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px;color:#1f2430}
 .hint{font-size:12px;color:#667085;margin:3px 0 0}
+#avbtn{margin-top:10px;display:none;font-size:15px;padding:11px 16px}
+#aviso{display:none;position:fixed;inset:0;z-index:2500;background:#0008;overflow-y:auto;padding:12px}
+#avbox{position:relative;background:#fff;max-width:520px;margin:10px auto 40px;border-radius:14px;padding:16px}
+#avx{position:absolute;top:8px;right:12px;border:0;background:none;font-size:26px;cursor:pointer;color:#667085}
+#avbox h3{margin:0 28px 2px 0;font-size:19px}
+.step{margin-top:14px}.step>b{display:block;margin-bottom:6px}
+#amap{height:230px;width:100%;margin-top:8px;border-radius:10px;border:1px solid #cbd1d9}
+#avbox input[type=text]{width:100%;padding:11px;font-size:16px;border:1px solid #cbd1d9;border-radius:8px;margin-bottom:6px}
+#avcats{display:flex;flex-wrap:wrap;gap:6px}
+#avcats .chip{font-size:15px}
+#av-web{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#averr{color:#b91c1c;font-size:14px;margin-top:8px;min-height:18px}
+#avok{text-align:center;padding:20px 6px}#avok h3{margin:8px 0}
+#avcfg{display:none;margin-top:16px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px}
+#avcfg h3{margin:0 0 6px;font-size:16px}#avcfg ol{padding-left:20px;font-size:14px;margin:6px 0}
+#avcfg textarea{height:90px;margin-top:6px}
 </style>
 </head>
 <body>
-<header><h1>Mapa Comercial Envigado</h1><p>Descubre los negocios del centro de Envigado.</p></header>
+<header><h1>Mapa Comercial Envigado</h1><p>Descubre los negocios del centro de Envigado.</p>
+  <button class="btn" id="avbtn" type="button">➕ Avisar de un negocio</button></header>
 
 <div id="ebar">
   <b>✏️ Modo editor.</b> Los cambios se guardan solo en este navegador hasta que exportes y los pegues en GitHub.
   <span id="ecount"></span><br>
   <button class="btn" id="eadd" type="button">+ Agregar negocio</button>
   <button class="btn o" id="eexp" type="button">Exportar</button>
+  <button class="btn o" id="epaste" type="button">Pegar aviso</button>
 </div>
 
 <div class="top">
@@ -90,6 +108,46 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
     <div class="btns"><button class="btn" id="ecopy" type="button">Copiar negocios.js</button><button class="btn r" id="eclear" type="button">Borrar cambios locales</button></div>
   </div>
 </section>
+
+<div id="avcfg" style="margin:16px auto;max-width:900px">
+  <h3>Configurar avisos (una sola vez)</h3>
+  <ol>
+    <li>Crea un Google Form con 8 preguntas de <b>respuesta corta</b>, en este orden: nombre, categoria, direccion, telefono, lat, lng, precision, metodo.</li>
+    <li>Menú ⋮ → <b>Obtener enlace prefabricado</b>. En cada pregunta escribe su propio nombre como respuesta (en la de «nombre» escribe nombre, etc.) y copia el enlace.</li>
+    <li>Pégalo aquí:</li>
+  </ol>
+  <textarea id="avlink" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123=nombre&..."></textarea>
+  <div class="btns"><button class="btn" id="avgen" type="button">Generar configuración</button></div>
+  <textarea id="avout" readonly placeholder="Aquí aparecerá el texto para config-avisos.js"></textarea>
+  <p class="hint">Copia ese texto, abre <b>config-avisos.js</b> en GitHub (lápiz), reemplaza todo y haz Commit.</p>
+</div>
+
+<div id="aviso"><div id="avbox">
+  <button id="avx" type="button" aria-label="Cerrar">×</button>
+  <div id="avform">
+    <h3>Avisar de un negocio</h3>
+    <p class="hint">Toma 20 segundos. El aviso no aparece en el mapa hasta que lo revisemos.</p>
+    <div class="step"><b>1. ¿Dónde está?</b>
+      <button class="btn" id="avgps" type="button">📍 Estoy en el negocio: usar mi ubicación</button>
+      <div class="hint" id="avgpsmsg"></div>
+      <div id="amap"></div>
+      <p class="hint">Si el punto no está sobre el negocio, arrástralo o toca el mapa para moverlo.</p>
+    </div>
+    <div class="step"><b>2. ¿Cómo se llama?</b><input type="text" id="av-nombre" maxlength="80" placeholder="Nombre del negocio" autocomplete="off"></div>
+    <div class="step"><b>3. ¿Qué tipo de negocio es?</b><div id="avcats"></div></div>
+    <div class="step"><b>4. Opcional</b>
+      <input type="text" id="av-direccion" maxlength="120" placeholder="Dirección (ej. Calle 38 Sur # 42-10)" autocomplete="off">
+      <input type="text" id="av-telefono" maxlength="20" inputmode="tel" placeholder="Teléfono del negocio" autocomplete="off">
+    </div>
+    <input type="text" id="av-web" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div id="averr" role="alert"></div>
+    <button class="btn" id="avsend" type="button" style="width:100%;padding:13px;font-size:16px">Enviar aviso</button>
+    <p class="hint">Al enviar autorizas publicar el nombre, la ubicación y el teléfono comercial del negocio. No envíes teléfonos personales.</p>
+  </div>
+  <div id="avok" style="display:none"><div style="font-size:42px">✅</div><h3>¡Gracias!</h3>
+    <p>Recibimos tu aviso. Lo revisaremos y aparecerá en el mapa cuando se confirme.</p>
+    <div class="btns" style="justify-content:center"><button class="btn" id="avmore" type="button">Avisar de otro</button><button class="btn o" id="avclose" type="button">Cerrar</button></div></div>
+</div></div>
 
 <div id="modal"><div id="form">
   <h3 id="ftitle">Editar negocio</h3><p class="hint" id="fid"></p>
@@ -123,6 +181,7 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="negocios.js"></script>
+<script src="config-avisos.js"></script>
 <script>
 const EDITOR=/[?&]editar/.test(location.search);
 const ICON={"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Bar":["🍺","#7c3aed"],"Café":["☕","#92400e"],"Calzado":["👟","#2563eb"],"Ropa":["👕","#db2777"],"Mercería":["🧵","#c026d3"],"Servicios financieros":["🏦","#0369a1"],"Salud":["🩺","#0d9488"],"Belleza":["💇","#e11d48"],"Tecnología":["📱","#4f46e5"],"Supermercado":["🛒","#65a30d"],"Tienda":["🏪","#ca8a04"],"Panadería":["🥖","#b45309"],"Papelería":["✏️","#0891b2"],"Librería":["📚","#7e22ce"],"Carnicería":["🥩","#b91c1c"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Ferretería":["🔧","#475569"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"]};
@@ -270,11 +329,12 @@ function saveForm(){
   closeModal();editing=null;buildChips();render();
   if(has(n))show(n);
 }
-function newSlot(){
+function freeSlot(){
   let n=negocios.find(x=>!(x.nombre&&x.nombre.trim()));
   if(!n){const max=Math.max(0,...negocios.map(x=>parseInt(String(x.id).replace(/\D/g,""))||0));n={id:"ENV-"+String(max+1).padStart(3,"0"),nombre:"",categoria:"",direccion:"",lat:null,lng:null,telefono:"",whatsapp:"",horario:"",fuente:"",verificado:false};negocios.push(n)}
-  openModal(n);
+  return n;
 }
+function newSlot(draft){const n=freeSlot();openModal(n,draft)}
 
 // ---- Eventos ----
 document.addEventListener("click",e=>{
@@ -291,7 +351,7 @@ $("search").addEventListener("input",()=>{lim=30;render()});
 if(EDITOR){
   $("ebar").style.display="block";$("export").style.display="block";
   $("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
-  $("eadd").onclick=newSlot;
+  $("eadd").onclick=()=>newSlot();
   $("eexp").onclick=()=>$("export").scrollIntoView({behavior:"smooth"});
   $("fsave").onclick=saveForm;
   $("fcancel").onclick=()=>{closeModal();editing=null};
@@ -304,6 +364,109 @@ if(EDITOR){
   };
   $("ecopy").onclick=()=>{const t=$("exp");t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert("Copiado. Ahora pégalo en negocios.js en GitHub."),()=>alert("Texto seleccionado: usa Copiar del teléfono."))}catch(_){alert("Texto seleccionado: usa Copiar del teléfono.")}};
   $("eclear").onclick=()=>{if(confirm("Solo borra esto DESPUÉS de haber pegado el negocios.js exportado en GitHub y de que la página se haya actualizado. ¿Borrar los cambios locales?")){edits={};saved={};try{localStorage.removeItem("env-edits");localStorage.removeItem("env-loc")}catch(_){}location.reload()}};
+}
+
+// ---- Avisos ciudadanos ----
+const AV=(typeof AVISOS!=="undefined"&&AVISOS)||{url:"",campos:{}};
+const AVKEYS=["nombre","categoria","direccion","telefono","lat","lng","precision","metodo"];
+const AVCATS=["Restaurante","Comida rápida","Café","Bar","Tienda","Ropa","Calzado","Farmacia","Salud","Belleza","Tecnología","Servicios financieros","Supermercado","Otro"];
+const ENV_BOX={latMin:6.12,latMax:6.23,lngMin:-75.62,lngMax:-75.54};
+const LINK=/https?:|www\.|\.com\b|\.co\b|@/i;
+let av=null,amap=null,amark=null;
+const avMsg=t=>{$("avgpsmsg").textContent=t};
+const avErr=t=>{$("averr").textContent=t};
+const clean=s=>String(s||"").replace(/[\u0000-\u001f]/g," ").replace(/\s+/g," ").trim();
+function meters(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b);
+  const k=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(k))}
+function avReset(){
+  av={lat:null,lng:null,prec:"",gps:false,moved:false,cat:"",t0:Date.now()};
+  ["av-nombre","av-direccion","av-telefono","av-web"].forEach(i=>$(i).value="");
+  avErr("");avMsg("");
+  if(amark&&amap){amap.removeLayer(amark)}amark=null;
+  [...$("avcats").children].forEach(b=>b.classList.remove("on"));
+}
+function avPlace(lat,lng,manual){
+  av.lat=lat;av.lng=lng;if(manual)av.moved=true;
+  if(!amark){
+    amark=L.marker([lat,lng],{draggable:true}).addTo(amap);
+    amark.on("dragend",()=>{const p=amark.getLatLng();av.lat=p.lat;av.lng=p.lng;av.moved=true;avMsg("Punto ajustado a mano.")});
+  }else amark.setLatLng([lat,lng]);
+}
+function avOpen(){
+  $("aviso").style.display="block";$("avform").style.display="block";$("avok").style.display="none";$("aviso").scrollTop=0;
+  if(!amap){
+    amap=L.map("amap").setView([6.1736,-75.5865],17);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(amap);
+    amap.on("click",e=>{avPlace(e.latlng.lat,e.latlng.lng,true);avMsg("Punto marcado a mano.")});
+    AVCATS.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=(c==="Otro"?"➕":iconOf(c)[0])+" "+c;
+      b.onclick=()=>{av.cat=c;[...$("avcats").children].forEach(x=>x.classList.remove("on"));b.classList.add("on")};$("avcats").appendChild(b)});
+  }
+  avReset();setTimeout(()=>amap.invalidateSize(),150);
+}
+function avClose(){$("aviso").style.display="none"}
+function avGps(){
+  if(!navigator.geolocation){avMsg("Tu navegador no permite GPS. Toca el mapa para marcar el punto.");return}
+  avMsg("Buscando tu ubicación…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    av.gps=true;av.moved=false;av.prec=Math.round(p.coords.accuracy);
+    avPlace(p.coords.latitude,p.coords.longitude,false);amap.setView([p.coords.latitude,p.coords.longitude],19);
+    avMsg("Ubicación tomada (±"+av.prec+" m)."+(av.prec>50?" La precisión es baja: mueve el punto al lugar exacto.":" Si no está sobre el negocio, muévela."));
+  },()=>avMsg("No pude obtener tu ubicación (revisa el permiso del navegador). Toca el mapa para marcar el punto."),
+  {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function avRate(){let t=[];try{t=JSON.parse(localStorage.getItem("env-av")||"[]")}catch(e){}
+  const now=Date.now();t=t.filter(x=>now-x<864e5);return t}
+async function avSend(){
+  avErr("");
+  if($("av-web").value){avDone();return}                       // trampa para bots
+  const nombre=clean($("av-nombre").value),dir=clean($("av-direccion").value),tel=$("av-telefono").value.trim();
+  if(av.lat==null)return avErr("Usa tu ubicación o toca el mapa para marcar el punto.");
+  if(!(av.lat>ENV_BOX.latMin&&av.lat<ENV_BOX.latMax&&av.lng>ENV_BOX.lngMin&&av.lng<ENV_BOX.lngMax))return avErr("Ese punto queda fuera de Envigado. Muévelo al negocio.");
+  if(nombre.length<2||/^(.)\1+$/.test(nombre))return avErr("Escribe el nombre del negocio.");
+  if(!av.cat)return avErr("Elige el tipo de negocio.");
+  if(tel&&!/^\+?[\d\s\-()]{7,16}$/.test(tel))return avErr("Revisa el teléfono: solo números.");
+  if(LINK.test(nombre+" "+dir))return avErr("Quita enlaces o correos del texto.");
+  if(Date.now()-av.t0<5000)return avErr("Revisa que el punto esté sobre el negocio y toca Enviar otra vez.");
+  const hist=avRate();
+  if(hist.length&&Date.now()-hist[hist.length-1]<30000)return avErr("Espera unos segundos antes de enviar otro aviso.");
+  if(hist.length>=5)return avErr("Llegaste al límite de avisos por hoy. ¡Gracias por ayudar!");
+  const dup=named().find(n=>has(n)&&meters(av.lat,av.lng,n.lat,n.lng)<40&&(norm(n.nombre).includes(norm(nombre))||norm(nombre).includes(norm(n.nombre))));
+  if(dup&&!confirm("Parece que «"+dup.nombre+"» ya está en el mapa, muy cerca. ¿Es otro local distinto?"))return;
+  if(!AV.url)return alert("Falta configurar el envío de avisos (config-avisos.js).");
+  const fd=new FormData(),c=AV.campos;
+  const metodo=!av.gps?"Manual":(av.moved?"GPS ajustado":"GPS");
+  const vals={nombre,categoria:av.cat,direccion:dir,telefono:tel,lat:av.lat.toFixed(6),lng:av.lng.toFixed(6),precision:av.gps?String(av.prec):"",metodo};
+  AVKEYS.forEach(k=>fd.append(c[k],vals[k]));
+  $("avsend").disabled=true;$("avsend").textContent="Enviando…";
+  try{await fetch(AV.url,{method:"POST",mode:"no-cors",body:fd})}
+  catch(e){$("avsend").disabled=false;$("avsend").textContent="Enviar aviso";return avErr("No se pudo enviar. Revisa tu conexión e intenta de nuevo.")}
+  hist.push(Date.now());try{localStorage.setItem("env-av",JSON.stringify(hist))}catch(e){}
+  $("avsend").disabled=false;$("avsend").textContent="Enviar aviso";avDone();
+}
+function avDone(){$("avform").style.display="none";$("avok").style.display="block";$("aviso").scrollTop=0}
+if(AV.url||EDITOR)$("avbtn").style.display="inline-block";
+$("avbtn").onclick=avOpen;$("avx").onclick=avClose;$("avclose").onclick=avClose;
+$("avmore").onclick=()=>{$("avform").style.display="block";$("avok").style.display="none";avReset();setTimeout(()=>amap.invalidateSize(),100)};
+$("avgps").onclick=avGps;$("avsend").onclick=avSend;
+
+if(EDITOR){
+  $("avcfg").style.display="block";
+  $("avgen").onclick=()=>{
+    try{
+      const u=new URL($("avlink").value.trim()),m=u.pathname.match(/\/forms\/d\/e\/([^\/]+)/);if(!m)throw 0;
+      const campos={};
+      u.searchParams.forEach((v,k)=>{const x=v.trim().toLowerCase();if(/^entry\.\d+$/.test(k)&&AVKEYS.includes(x))campos[x]=k});
+      const falta=AVKEYS.filter(k=>!campos[k]);
+      if(falta.length){alert("Faltan respuestas de ejemplo para: "+falta.join(", ")+". Rellena cada pregunta con su propio nombre y copia el enlace de nuevo.");return}
+      const ordered={};AVKEYS.forEach(k=>ordered[k]=campos[k]);
+      $("avout").value="// Configuración de avisos ciudadanos\nconst AVISOS = "+JSON.stringify({url:"https://docs.google.com/forms/d/e/"+m[1]+"/formResponse",campos:ordered},null,2)+";\n";
+    }catch(e){alert("No reconozco ese enlace. Debe ser el enlace prefabricado del formulario de Google.")}
+  };
+  $("epaste").onclick=()=>{
+    const t=prompt("Pega aquí la fila del aviso copiada de tu hoja de cálculo:");if(!t)return;
+    const c=t.split("\t").map(x=>x.trim()),o=c.length>=9?1:0,g=i=>c[o+i]||"";
+    newSlot({nombre:g(0),categoria:g(1)==="Otro"?"":g(1),direccion:g(2),telefono:g(3),whatsapp:"",horario:"",lat:g(4).replace(",","."),lng:g(5).replace(",","."),fuente:"Aviso ciudadano · "+(g(7)||"?")+(g(6)?" ±"+g(6)+" m":""),verificado:false});
+  };
 }
 buildChips();render();
 </script>
