@@ -25,18 +25,19 @@ footer{padding:14px;font-size:12px;color:#666;text-align:center}textarea{width:1
 <div id="map"></div>
 <section id="results"><h2>Negocios</h2><div id="business-list"></div>
 <details><summary>Exportar datos para negocios.js</summary><textarea id="exp" readonly></textarea></details></section>
-<footer>Demo inicial. Información pendiente de verificación. Mapa © OpenStreetMap contributors.</footer>
+<p id="cnt" style="padding:0 14px;font-size:13px;color:#555"></p><footer>Demo inicial. Información pendiente de verificación. Mapa © OpenStreetMap contributors.</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="negocios.js"></script>
 <script>
 // Coordenadas guardadas en el navegador (se combinan con negocios.js)
 let saved={};try{saved=JSON.parse(localStorage.getItem("env-loc")||"{}")}catch(e){}
-negocios.forEach(n=>{if(saved[n.id]&&n.lat==null){n.lat=saved[n.id].lat;n.lng=saved[n.id].lng;n.estado="Ubicación sin verificar"}});
+negocios.forEach(n=>{if(saved[n.id]&&n.lat==null){n.lat=saved[n.id].lat;n.lng=saved[n.id].lng}});
+const estadoDe=n=>n.verificado?"Verificado":(Number.isFinite(n.lat)&&Number.isFinite(n.lng)?"Ubicado, sin verificar":"Pendiente de ubicación");
 const map=L.map("map").setView([6.1736,-75.5865],17);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
 const layer=L.layerGroup().addTo(map);
 const list=document.getElementById("business-list"),search=document.getElementById("search"),category=document.getElementById("category"),msg=document.getElementById("msg");
-[...new Set(negocios.map(n=>n.categoria))].sort().forEach(c=>{const o=document.createElement("option");o.value=o.textContent=c;category.appendChild(o)});
+[...new Set(negocios.filter(n=>n.nombre.trim()&&n.categoria).map(n=>n.categoria))].sort().forEach(c=>{const o=document.createElement("option");o.value=o.textContent=c;category.appendChild(o)});
 let picking=null;
 const has=n=>Number.isFinite(n.lat)&&Number.isFinite(n.lng);
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
@@ -44,25 +45,26 @@ const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 function render(){
   const q=norm(search.value.trim()),cat=category.value;
   list.innerHTML="";layer.clearLayers();
-  const f=negocios.filter(n=>norm(n.nombre).includes(q)&&(!cat||n.categoria===cat));
+  const f=negocios.filter(n=>n.nombre.trim()&&norm(n.nombre+" "+(n.direccion||"")).includes(q)&&(!cat||n.categoria===cat));
   f.forEach(n=>{
     const a=document.createElement("article");a.className="business";
-    a.innerHTML=`<h3>${esc(n.nombre)}</h3><p>Categoría: ${esc(n.categoria)}</p><span class="badge ${has(n)?"ok":""}">${esc(n.estado)}</span>`;
+    a.innerHTML=`<h3>${esc(n.nombre)}</h3><p>Categoría: ${esc(n.categoria||"Sin categoría")}</p>${n.direccion?`<p>📍 ${esc(n.direccion)}</p>`:""}${n.telefono?`<p>📞 ${esc(n.telefono)}</p>`:""}${n.fuente?`<p>Fuente: ${esc(n.fuente)}</p>`:""}<span class="badge ${n.verificado?"ok":""}">${esc(estadoDe(n))}</span>`;
     const b=document.createElement("button");b.textContent=has(n)?"Mover en el mapa":"Ubicar en el mapa";
     b.onclick=e=>{e.stopPropagation();picking=n;msg.style.display="block";msg.textContent="Haz clic en el mapa donde está «"+n.nombre+"».";document.getElementById("map").classList.add("picking");window.scrollTo({top:0,behavior:"smooth"})};
     a.appendChild(b);
     if(has(n)){
-      const m=L.marker([n.lat,n.lng]).addTo(layer).bindPopup(`<strong>${esc(n.nombre)}</strong><br>${esc(n.categoria)}`);
+      const m=L.marker([n.lat,n.lng]).addTo(layer).bindPopup(`<strong>${esc(n.nombre)}</strong><br>${esc(n.categoria)}${n.direccion?"<br>"+esc(n.direccion):""}`);
       a.style.cursor="pointer";a.onclick=()=>{map.setView([n.lat,n.lng],18);m.openPopup()};
     }
     list.appendChild(a);
   });
   if(!f.length)list.textContent="No se encontraron negocios.";
-  document.getElementById("exp").value="const negocios = "+JSON.stringify(negocios,null,2)+";";
+  document.getElementById("exp").value="const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(n)).join(",\n")+"\n];";
+  document.getElementById("cnt").textContent=f.length+" negocios mostrados de "+negocios.filter(n=>n.nombre.trim()).length+" registrados · "+negocios.filter(n=>has(n)&&n.nombre.trim()).length+" con ubicación";
 }
 map.on("click",e=>{
   if(!picking)return;
-  picking.lat=+e.latlng.lat.toFixed(6);picking.lng=+e.latlng.lng.toFixed(6);picking.estado="Ubicación sin verificar";
+  picking.lat=+e.latlng.lat.toFixed(6);picking.lng=+e.latlng.lng.toFixed(6);
   saved[picking.id]={lat:picking.lat,lng:picking.lng};
   try{localStorage.setItem("env-loc",JSON.stringify(saved))}catch(_){}
   picking=null;msg.style.display="none";document.getElementById("map").classList.remove("picking");render();
