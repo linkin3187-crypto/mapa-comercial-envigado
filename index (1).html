@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Comercial Envigado</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1f2430;background:#f5f6f8;line-height:1.4}
+header{padding:14px 16px;background:#fff;border-bottom:1px solid #e2e5ea}
+header h1{margin:0;font-size:21px}header p{margin:3px 0 0;color:#667085;font-size:14px}
+.top{position:sticky;top:0;z-index:1200;background:#fff;padding:10px 12px;border-bottom:1px solid #e2e5ea}
+input[type=search]{width:100%;padding:12px;font-size:16px;border:1px solid #cbd1d9;border-radius:10px;background:#fff}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;padding:7px 12px;border:1px solid #cbd1d9;border-radius:999px;background:#fff;font-size:14px;cursor:pointer;white-space:nowrap}
+.chip.on{background:#0f766e;border-color:#0f766e;color:#fff}
+#msg{display:none;padding:10px 14px;background:#e0f2fe;font-size:14px}
+#mapwrap{position:relative}
+#map{height:62vh;min-height:360px;width:100%}#map.picking{cursor:crosshair}
+#fit{position:absolute;top:10px;right:10px;z-index:1000;padding:9px 12px;border:0;border-radius:8px;background:#fff;box-shadow:0 1px 5px #0004;font-size:13px;cursor:pointer}
+.pin{width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px #0006;display:flex;align-items:center;justify-content:center}
+.pin span{transform:rotate(45deg);font-size:16px;line-height:1}
+#sheet{display:none;position:absolute;left:8px;right:8px;bottom:8px;z-index:1100;max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 18px #0005}
+#sheet h3{margin:0 24px 4px 0;font-size:18px}#sheet p{margin:3px 0;font-size:14px;color:#475467}
+#sx{position:absolute;top:8px;right:10px;border:0;background:none;font-size:22px;cursor:pointer;color:#667085}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.btn{display:inline-block;padding:9px 12px;border-radius:8px;border:1px solid #0f766e;background:#0f766e;color:#fff;font-size:14px;text-decoration:none;cursor:pointer}
+.btn.o{background:#fff;color:#0f766e}
+#results{padding:14px;max-width:900px;margin:0 auto}
+#results h2{margin:0 0 4px;font-size:18px}#cnt{font-size:13px;color:#667085;margin:0 0 8px}
+.business{background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:13px;margin-bottom:10px}
+.business h3{margin:0 0 3px;font-size:16px}.business p{margin:2px 0;font-size:14px;color:#475467}
+.badge{display:inline-block;margin-top:5px;padding:3px 8px;border-radius:5px;background:#fef3c7;color:#92400e;font-size:12px}
+.badge.ok{background:#e6f4f1;color:#0f766e}
+#more{width:100%;padding:12px;border:1px solid #0f766e;background:#fff;color:#0f766e;border-radius:10px;font-size:15px;cursor:pointer}
+textarea{width:100%;height:160px;font-size:13px}
+footer{padding:14px;font-size:12px;color:#667085;text-align:center}
+</style>
+</head>
+<body>
+<header><h1>Mapa Comercial Envigado</h1><p>Descubre los negocios del centro de Envigado.</p></header>
+<div class="top">
+  <input id="search" type="search" placeholder="Buscar por nombre o dirección…" aria-label="Buscar un negocio">
+  <div id="chips" role="group" aria-label="Filtrar por categoría"></div>
+</div>
+<div id="msg"></div>
+<div id="mapwrap">
+  <div id="map" aria-label="Mapa comercial interactivo"></div>
+  <button id="fit" type="button">Ver todos</button>
+  <div id="sheet" role="dialog" aria-live="polite"></div>
+</div>
+<section id="results">
+  <h2>Negocios</h2><p id="cnt"></p>
+  <div id="business-list"></div>
+  <button id="more" type="button" style="display:none">Mostrar más</button>
+  <details style="margin-top:16px"><summary>Exportar datos para negocios.js</summary><textarea id="exp" readonly></textarea></details>
+</section>
+<footer>Información pendiente de verificación. Mapa © OpenStreetMap contributors.</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="negocios.js"></script>
+<script>
+const ICON={"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Bar":["🍺","#7c3aed"],"Café":["☕","#92400e"],"Calzado":["👟","#2563eb"],"Ropa":["👕","#db2777"],"Mercería":["🧵","#c026d3"],"Servicios financieros":["🏦","#0369a1"],"Salud":["🩺","#0d9488"],"Belleza":["💇","#e11d48"],"Tecnología":["📱","#4f46e5"],"Supermercado":["🛒","#65a30d"],"Tienda":["🏪","#ca8a04"],"Panadería":["🥖","#b45309"],"Papelería":["✏️","#0891b2"],"Librería":["📚","#7e22ce"],"Carnicería":["🥩","#b91c1c"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Ferretería":["🔧","#475569"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"]};
+const iconOf=c=>ICON[c]||["📍","#475569"];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const has=n=>Number.isFinite(n.lat)&&Number.isFinite(n.lng);
+const estadoDe=n=>n.verificado?"Verificado":(has(n)?"Ubicado, sin verificar":"Pendiente de ubicación");
+
+// Coordenadas guardadas en el navegador (se combinan con negocios.js)
+let saved={};try{saved=JSON.parse(localStorage.getItem("env-loc")||"{}")}catch(e){}
+negocios.forEach(n=>{if(saved[n.id]&&!has(n)){n.lat=saved[n.id].lat;n.lng=saved[n.id].lng}});
+
+// Teléfono y WhatsApp
+const firstPhone=t=>String(t||"").split(/[\/,;]| y /)[0];
+const telDigits=t=>firstPhone(t).replace(/[^\d+]/g,"");
+const waNumber=t=>{const d=firstPhone(t).replace(/\D/g,"");
+  if(d.length===10&&d[0]==="3")return "57"+d;
+  if(d.length===12&&d.startsWith("573"))return d;
+  return "";};
+const dirUrl=n=>"https://www.google.com/maps/dir/?api=1&destination="+n.lat+","+n.lng+"&travelmode=walking";
+
+function actions(n,inSheet){
+  let h="";
+  if(has(n))h+=`<a class="btn" target="_blank" rel="noopener" href="${dirUrl(n)}">🧭 Cómo llegar</a>`;
+  const t=telDigits(n.telefono);
+  if(t)h+=`<a class="btn o" href="tel:${esc(t)}">📞 Llamar</a>`;
+  const w=waNumber(n.telefono);
+  if(w)h+=`<a class="btn o" target="_blank" rel="noopener" href="https://wa.me/${w}">💬 WhatsApp</a>`;
+  if(!inSheet&&has(n))h+=`<button class="btn o" data-act="see" data-id="${esc(n.id)}">🗺️ Ver en mapa</button>`;
+  h+=`<button class="btn o" data-act="pick" data-id="${esc(n.id)}">${has(n)?"✏️ Mover":"📍 Ubicar en el mapa"}</button>`;
+  return h;
+}
+function info(n){
+  const ic=iconOf(n.categoria);
+  return `<p>${ic[0]} ${esc(n.categoria||"Sin categoría")}</p>`+
+    (n.direccion?`<p>📍 ${esc(n.direccion)}</p>`:"")+
+    (n.telefono?`<p>📞 ${esc(n.telefono)}</p>`:"")+
+    (n.horario?`<p>🕒 ${esc(n.horario)}</p>`:"")+
+    `<span class="badge ${n.verificado?"ok":""}">${esc(estadoDe(n))}</span>`;
+}
+
+// Mapa
+const map=L.map("map").setView([6.1736,-75.5865],17);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
+const cluster=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45}).addTo(map);
+const markerById={};
+const sheet=$("sheet");
+L.DomEvent.disableClickPropagation(sheet);
+function openSheet(n){
+  sheet.innerHTML=`<button id="sx" aria-label="Cerrar">×</button><h3>${esc(n.nombre)}</h3>${info(n)}<div class="btns">${actions(n,true)}</div>`;
+  sheet.style.display="block";
+  $("sx").onclick=closeSheet;
+}
+function closeSheet(){sheet.style.display="none"}
+function mkIcon(n){const ic=iconOf(n.categoria);
+  return L.divIcon({className:"",html:`<div class="pin" style="background:${ic[1]}"><span>${ic[0]}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});}
+
+// Estado
+let activeCat="",lim=30,picking=null;
+const named=()=>negocios.filter(n=>n.nombre&&n.nombre.trim());
+function buildChips(){
+  const cats=[...new Set(named().map(n=>n.categoria).filter(Boolean))].sort();
+  const box=$("chips");box.innerHTML="";
+  [["","Todos"]].concat(cats.map(c=>[c,iconOf(c)[0]+" "+c])).forEach(([v,t])=>{
+    const b=document.createElement("button");b.type="button";b.className="chip"+(activeCat===v?" on":"");b.textContent=t;
+    b.onclick=()=>{activeCat=v;lim=30;buildChips();render()};box.appendChild(b);
+  });
+}
+function render(){
+  const q=norm($("search").value.trim());
+  const f=named().filter(n=>norm(n.nombre+" "+(n.direccion||"")).includes(q)&&(!activeCat||n.categoria===activeCat));
+  cluster.clearLayers();Object.keys(markerById).forEach(k=>delete markerById[k]);
+  f.filter(has).forEach(n=>{
+    const m=L.marker([n.lat,n.lng],{icon:mkIcon(n),title:n.nombre});
+    m.on("click",()=>openSheet(n));cluster.addLayer(m);markerById[n.id]=m;
+  });
+  const list=$("business-list");list.innerHTML="";
+  f.slice(0,lim).forEach(n=>{
+    const a=document.createElement("article");a.className="business";
+    a.innerHTML=`<h3>${esc(n.nombre)}</h3>${info(n)}<div class="btns">${actions(n,false)}</div>`;
+    list.appendChild(a);
+  });
+  $("cnt").textContent=f.length?`Mostrando ${Math.min(lim,f.length)} de ${f.length} negocios · ${named().filter(has).length} con ubicación`:"No se encontraron negocios.";
+  $("more").style.display=f.length>lim?"block":"none";
+  $("exp").value="const negocios = [\n"+negocios.map(n=>"  "+JSON.stringify(n)).join(",\n")+"\n];";
+}
+function show(n){
+  if(!has(n))return;
+  window.scrollTo({top:0,behavior:"smooth"});
+  map.setView([n.lat,n.lng],18);openSheet(n);
+}
+function startPick(n){
+  picking=n;closeSheet();
+  $("msg").style.display="block";$("msg").textContent="Toca en el mapa el lugar exacto de «"+n.nombre+"».";
+  $("map").classList.add("picking");window.scrollTo({top:0,behavior:"smooth"});
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const n=negocios.find(x=>x.id===b.dataset.id);if(!n)return;
+  if(b.dataset.act==="pick")startPick(n);else if(b.dataset.act==="see")show(n);
+});
+map.on("click",e=>{
+  if(!picking){closeSheet();return}
+  picking.lat=+e.latlng.lat.toFixed(6);picking.lng=+e.latlng.lng.toFixed(6);
+  saved[picking.id]={lat:picking.lat,lng:picking.lng};
+  try{localStorage.setItem("env-loc",JSON.stringify(saved))}catch(_){}
+  const n=picking;picking=null;$("msg").style.display="none";$("map").classList.remove("picking");
+  render();openSheet(n);
+});
+$("fit").onclick=()=>{const b=cluster.getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]});else map.setView([6.1736,-75.5865],17)};
+$("more").onclick=()=>{lim+=30;render()};
+$("search").addEventListener("input",()=>{lim=30;render()});
+buildChips();render();
+</script>
+</body>
+</html>
