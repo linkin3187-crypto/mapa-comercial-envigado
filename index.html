@@ -159,6 +159,19 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
   </div>
 </section>
 
+<div id="evcfg" style="display:none;margin:16px auto;max-width:900px;background:#fff;border:1px solid #e2e5ea;border-radius:12px;padding:14px">
+  <h3 style="margin:0 0 6px;font-size:16px">Configurar medición de uso (una sola vez)</h3>
+  <ol style="padding-left:20px;font-size:14px;margin:6px 0">
+    <li>Crea <b>otro</b> Google Form (distinto al de avisos) con 6 preguntas de <b>respuesta corta</b>, en este orden: evento, detalle, extra, resultados, sesion, dispositivo.</li>
+    <li>Menú ⋮ → <b>Completar previamente el formulario</b>. En cada pregunta escribe su propio nombre como respuesta y copia el enlace.</li>
+    <li>Pégalo aquí:</li>
+  </ol>
+  <textarea id="evlink" style="height:90px" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123=evento&..."></textarea>
+  <div class="btns"><button class="btn" id="evgen" type="button">Generar configuración</button></div>
+  <textarea id="evout" style="height:90px;margin-top:6px" readonly placeholder="Aquí aparecerá el texto para config-eventos.js"></textarea>
+  <p class="hint">Copia ese texto, abre <b>config-eventos.js</b> en GitHub (lápiz), reemplaza todo y haz Commit.</p>
+</div>
+
 <!-- Aviso rápido -->
 <div id="aviso"><div id="avbox">
   <button id="avx" type="button" aria-label="Cerrar">×</button>
@@ -278,6 +291,7 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
 <script src="negocios.js"></script>
 <script src="config-avisos.js"></script>
 <script src="config-contacto.js"></script>
+<script src="config-eventos.js"></script>
 <script>
 const EDITOR=/[?&]editar/.test(location.search);
 const ICON={"Tienda de barrio":["🏪","#ca8a04"],"Tienda":["🏪","#ca8a04"],"Restaurante":["🍽️","#dc2626"],"Comida rápida":["🍔","#ea580c"],"Panadería":["🥖","#b45309"],"Café":["☕","#92400e"],"Bar":["🍺","#7c3aed"],"Farmacia":["💊","#16a34a"],"Droguería":["💊","#15803d"],"Ferretería":["🔧","#475569"],"Llantería":["🛞","#334155"],"Costurera":["🧵","#c026d3"],"Mercería":["🧵","#c026d3"],"Carpintería":["🪚","#a16207"],"Mecánica":["🛠️","#1d4ed8"],"Peluquería":["💇","#e11d48"],"Belleza":["💇","#e11d48"],"Papelería":["✏️","#0891b2"],"Fruver":["🍎","#65a30d"],"Carnicería":["🥩","#b91c1c"],"Ropa":["👕","#db2777"],"Calzado":["👟","#2563eb"],"Tecnología":["📱","#4f46e5"],"Salud":["🩺","#0d9488"],"Servicios financieros":["🏦","#0369a1"],"Supermercado":["🛒","#65a30d"],"Librería":["📚","#7e22ce"],"Joyería":["💍","#a16207"],"Óptica":["👓","#0e7490"],"Regalos":["🎁","#be185d"],"Accesorios":["👜","#9d174d"],"Variedades":["🛍️","#0f766e"],"Almacén":["🏬","#1d4ed8"],"Electricista":["💡","#ca8a04"],"Plomero":["🚰","#0284c7"],"Cerrajería":["🔑","#6b7280"],"Tapicería":["🛋️","#9a3412"],"Zapatería":["👞","#78350f"],"Lavandería":["🧺","#0ea5e9"]};
@@ -399,11 +413,11 @@ function shareBiz(n){
 
 function actions(n,inSheet){
   let h="";
-  if(has(n))h+=`<a class="btn" target="_blank" rel="noopener" href="${dirUrl(n)}">🧭 Cómo llegar</a>`;
+  if(has(n))h+=`<a class="btn" data-ev="como_llegar" data-id="${esc(n.id)}" target="_blank" rel="noopener" href="${dirUrl(n)}">🧭 Cómo llegar</a>`;
   const t=telDigits(n.telefono);
-  if(t)h+=`<a class="btn o" href="tel:${esc(t)}">📞 Llamar</a>`;
+  if(t)h+=`<a class="btn o" data-ev="llamar" data-id="${esc(n.id)}" href="tel:${esc(t)}">📞 Llamar</a>`;
   const w=waNumber(n);
-  if(w)h+=`<a class="btn o" target="_blank" rel="noopener" href="https://wa.me/${w}">💬 WhatsApp</a>`;
+  if(w)h+=`<a class="btn o" data-ev="whatsapp" data-id="${esc(n.id)}" target="_blank" rel="noopener" href="https://wa.me/${w}">💬 WhatsApp</a>`;
   h+=`<button class="btn o" data-act="share" data-id="${esc(n.id)}">🔗 Compartir</button>`;
   if(!inSheet&&has(n))h+=`<button class="btn o" data-act="see" data-id="${esc(n.id)}">🗺️ Ver en mapa</button>`;
   if(!EDITOR&&CT.correo)h+=`<a class="btn o" href="${mailFix(n)}">⚠️ Reportar error</a>`;
@@ -449,7 +463,7 @@ function mkIcon(n){const ic=iconOf(n.categoria);
   return L.divIcon({className:"",html:`<div class="pin" style="background:${ic[1]}"><span>${ic[0]}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});}
 
 // ---- Búsqueda, filtros y lista ----
-let activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="",fOpen=false,fSun=false,fWho=false,muni="",grpSel="",mb="";
+let lastRes={n:0,par:false},activeCat="",lim=30,picking=null,editing=null,userPos=null,vf="",fOpen=false,fSun=false,fWho=false,muni="",grpSel="",mb="";
 const named=()=>negocios.filter(n=>n.nombre&&n.nombre.trim());
 const hay=n=>norm([n.nombre,n.categoria,groupOf(n),approx(n)?"":n.direccion,n.barrio,n.municipio,n.cobertura,n.palabras_clave,CATSYN[n.categoria]||"",n.tipo,n.canal].join(" "));
 const coversAll=n=>norm(n.cobertura||"").includes("todo el valle");
@@ -469,7 +483,7 @@ function buildChips(){
   const box=$("chips");box.innerHTML="";
   [["","Todos"]].concat(cats.map(c=>[c,iconOf(c)[0]+" "+c])).forEach(([v,t])=>{
     const b=document.createElement("button");b.type="button";b.className="chip"+(activeCat===v?" on":"");b.textContent=t;
-    b.onclick=()=>{activeCat=v;lim=30;buildChips();render()};box.appendChild(b);
+    b.onclick=()=>{activeCat=v;lim=30;track("categoria",v||"todos");buildChips();render()};box.appendChild(b);
   });
   $("cats").innerHTML=[...new Set(Object.keys(ICON).concat(allCats))].sort().map(c=>`<option value="${esc(c)}">`).join("");
   const ms=[...new Set(named().map(n=>n.municipio).filter(Boolean))].sort(),sel=$("muni");
@@ -503,10 +517,11 @@ function render(){
     if(!f.length){f=base.filter(n=>sc.get(n)>0).sort((a,b)=>sc.get(b)-sc.get(a));parecidas=f.length>0}
   }
   if(userPos&&!parecidas)f.sort((a,b)=>(has(a)?meters(userPos.lat,userPos.lng,a.lat,a.lng):1e12)-(has(b)?meters(userPos.lat,userPos.lng,b.lat,b.lng):1e12));
+  lastRes={n:f.length,par:parecidas};
   cluster.clearLayers();
   f.filter(has).forEach(n=>{
     const m=L.marker([n.lat,n.lng],{icon:mkIcon(n),title:n.nombre});
-    m.on("click",()=>openSheet(n));cluster.addLayer(m);
+    m.on("click",()=>{track("ver_ficha",n.id);openSheet(n)});cluster.addLayer(m);
   });
   const list=$("business-list");list.innerHTML="";
   f.slice(0,lim).forEach(n=>{
@@ -609,19 +624,19 @@ document.addEventListener("click",e=>{
   const n=negocios.find(x=>x.id===b.dataset.id);if(!n)return;
   const act=b.dataset.act;
   if(act==="pick")startPick(n,false);
-  else if(act==="see")show(n);
-  else if(act==="share")shareBiz(n);
+  else if(act==="see"){track("ver_en_mapa",n.id);show(n)}
+  else if(act==="share"){track("compartir",n.id);shareBiz(n)}
   else if(act==="edit"){closeSheet();openModal(n)}
   else if(act==="verify")openVerify(n);
 });
 $("fit").onclick=()=>{const b=cluster.getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]});else map.setView([6.1736,-75.5865],17)};
 $("more").onclick=()=>{lim+=30;render()};
 $("search").addEventListener("input",()=>{lim=30;render()});
-function toggleChip(id,get,set){const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle("on",get());lim=30;render()}}
+function toggleChip(id,get,set){const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle("on",get());if(get())track("filtro",id);lim=30;render()}}
 toggleChip("fopen",()=>fOpen,v=>fOpen=v);toggleChip("fsun",()=>fSun,v=>fSun=v);toggleChip("fwho",()=>fWho,v=>fWho=v);
 $("muni").onchange=()=>{muni=$("muni").value;lim=30;render();const b=cluster.getBounds();if(muni&&b.isValid())map.fitBounds(b,{padding:[30,30]})};
-$("grpsel").onchange=()=>{grpSel=$("grpsel").value;lim=30;buildChips();render()};
-$("mibarrio").onchange=()=>{mb=$("mibarrio").value;lim=30;render()};
+$("grpsel").onchange=()=>{grpSel=$("grpsel").value;lim=30;if(grpSel)track("grupo",grpSel);buildChips();render()};
+$("mibarrio").onchange=()=>{mb=$("mibarrio").value;lim=30;if(mb)track("barrio",mb);render()};
 buildHoursGrid();
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyMon({LV:["M","X","J","V"],LS:["M","X","J","V","S"],LD:["M","X","J","V","S","D"]}[b.dataset.copy]));
 
@@ -651,7 +666,7 @@ function avPlace(lat,lng,manual){
     amark.on("dragend",()=>{const p=amark.getLatLng();av.lat=p.lat;av.lng=p.lng;av.moved=true;avMsg("Punto ajustado a mano.")});
   }else amark.setLatLng([lat,lng]);
 }
-function avOpen(){
+function avOpen(){track("aviso_abierto","");
   $("aviso").style.display="block";$("avform").style.display="block";$("avok").style.display="none";$("aviso").scrollTop=0;
   if(!amap){
     amap=L.map("amap").setView([6.1736,-75.5865],17);
@@ -700,7 +715,7 @@ async function avSend(){
   try{await fetch(AV.url,{method:"POST",mode:"no-cors",body:fd})}
   catch(e){$("avsend").disabled=false;$("avsend").textContent="Enviar aviso";return avErr("No se pudo enviar. Revisa tu conexión e intenta de nuevo.")}
   hist.push(Date.now());try{localStorage.setItem("env-av",JSON.stringify(hist))}catch(e){}
-  $("avsend").disabled=false;$("avsend").textContent="Enviar aviso";avDone();
+  $("avsend").disabled=false;$("avsend").textContent="Enviar aviso";track("aviso_enviado","",av.cat);avDone();
 }
 function avDone(){$("avform").style.display="none";$("avok").style.display="block";$("aviso").scrollTop=0}
 if(AV.url||EDITOR)$("avbtn").style.display="inline-block";
@@ -732,7 +747,7 @@ function nearToggle(){
     userPos={lat:p.coords.latitude,lng:p.coords.longitude};
     userMarker=L.circleMarker([userPos.lat,userPos.lng],{radius:8,color:"#fff",weight:3,fillColor:"#2563eb",fillOpacity:1}).addTo(map);
     map.setView([userPos.lat,userPos.lng],17);
-    $("near").textContent="📍 Cerca de mí ✓";$("near").classList.add("on");lim=30;render();
+    $("near").textContent="📍 Cerca de mí ✓";$("near").classList.add("on");lim=30;track("cerca_de_mi","");render();
   },()=>{$("near").textContent="📍 Cerca de mí";alert("No pude obtener tu ubicación. Revisa el permiso del navegador.")},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
 }
 $("near").onclick=nearToggle;
@@ -864,6 +879,60 @@ if(EDITOR){
     newSlot(d);
   };
 }
+
+
+// ---- Medición de uso anónima (sin cookies, solo si config-eventos.js está llenado) ----
+const EV=(typeof EVENTOS!=="undefined"&&EVENTOS)||{url:"",campos:{}};
+const EVKEYS=["evento","detalle","extra","resultados","sesion","dispositivo"];
+function sid(){let s="";try{s=sessionStorage.getItem("env-sid")||"";if(!s){s=Math.random().toString(36).slice(2,10);sessionStorage.setItem("env-sid",s)}}catch(e){s="x"}return s}
+function track(ev,det,extra,res){
+  try{
+    if(EDITOR||!EV.url||navigator.doNotTrack==="1"||navigator.webdriver)return;
+    let c=0;try{c=+sessionStorage.getItem("env-ec")||0}catch(e){}
+    if(c>=40)return;try{sessionStorage.setItem("env-ec",String(c+1))}catch(e){}
+    const fd=new FormData(),k=EV.campos||{};
+    const vals={evento:ev,detalle:String(det||"").slice(0,80),extra:String(extra||"").slice(0,120),resultados:res==null?"":String(res),sesion:sid(),dispositivo:(window.innerWidth||0)<700?"móvil":"escritorio"};
+    EVKEYS.forEach(key=>{if(k[key])fd.append(k[key],vals[key])});
+    const p=fetch(EV.url,{method:"POST",mode:"no-cors",body:fd,keepalive:true});if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
+}
+function cleanQ(raw){
+  const q=norm(raw).replace(/\s+/g," ").trim();
+  if(q.length<3||/\d{6,}|@|https?:|www\./.test(q))return "";
+  return q.slice(0,60);
+}
+const filtrosTxt=()=>[activeCat&&"cat:"+activeCat,grpSel&&"grupo:"+grpSel,mb&&"barrio:"+mb,muni&&"muni:"+muni,fOpen&&"abierto",fSun&&"domingo",fWho&&"mayorista",userPos&&"cerca"].filter(Boolean).join("|");
+const seenQ=new Set();let stimer=null;
+$("search").addEventListener("input",()=>{
+  clearTimeout(stimer);
+  stimer=setTimeout(()=>{
+    const q=cleanQ($("search").value);if(!q||seenQ.has(q))return;seenQ.add(q);
+    track(lastRes.n===0?"sin_resultados":lastRes.par?"busqueda_parcial":"busqueda",q,filtrosTxt(),lastRes.n);
+  },1500);
+});
+document.addEventListener("click",e=>{const a=e.target.closest("[data-ev]");if(a)track(a.dataset.ev,a.dataset.id||"")});
+if(EDITOR){
+  $("evcfg").style.display="block";
+  $("evgen").onclick=()=>{
+    try{
+      const u=new URL($("evlink").value.trim()),m=u.pathname.match(/\/forms\/d\/e\/([^\/]+)/);if(!m)throw 0;
+      const campos={};
+      u.searchParams.forEach((v,k)=>{const x=v.trim().toLowerCase();if(/^entry\.\d+$/.test(k)&&EVKEYS.includes(x))campos[x]=k});
+      const falta=EVKEYS.filter(k=>!campos[k]);
+      if(falta.length){alert("Faltan respuestas de ejemplo para: "+falta.join(", ")+". Rellena cada pregunta con su propio nombre y copia el enlace de nuevo.");return}
+      const o={};EVKEYS.forEach(k=>o[k]=campos[k]);
+      $("evout").value="// Configuración de medición de uso\nconst EVENTOS = "+JSON.stringify({url:"https://docs.google.com/forms/d/e/"+m[1]+"/formResponse",campos:o},null,2)+";\n";
+    }catch(e){alert("No reconozco ese enlace. Debe ser el enlace prefabricado del formulario de Google.")}
+  };
+}
+(function(){
+  let seen=false;try{seen=!!sessionStorage.getItem("env-v")}catch(e){}
+  if(seen)return;
+  try{sessionStorage.setItem("env-v","1")}catch(e){}
+  let ref="";try{ref=new URL(document.referrer).hostname}catch(e){}
+  if(ref===location.hostname)ref="";
+  track("visita",ref,new URLSearchParams(location.search).get("n")?"enlace_directo":"");
+})();
 
 // ---- Inicio ----
 buildChips();render();
