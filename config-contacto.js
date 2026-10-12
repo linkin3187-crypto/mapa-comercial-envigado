@@ -4,6 +4,6 @@
 // Llena estos dos datos y haz Commit en GitHub.
 // ============================================================
 const CONTACTO = {
-  responsable: "",   // Ej: "Tu nombre completo o razón social"
+  responsable: "",   // Ej: "TuBarrio"
   correo: ""         // Ej: "contacto@tudominio.com" (un correo que revises)
 };
