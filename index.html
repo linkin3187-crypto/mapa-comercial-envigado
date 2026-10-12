@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Aquí va la etiqueta de verificación de Google Search Console (cuando la tengas) -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa Comercial Envigado · Negocios de tu barrio</title>
 <meta name="description" content="Encuentra tiendas de barrio, ferreterías, farmacias, restaurantes y oficios cerca de ti en Envigado y el Valle de Aburrá. Mapa gratis con horarios y cómo llegar.">
@@ -270,7 +271,7 @@ footer{padding:14px;font-size:12px;color:#667085;text-align:center}footer a{colo
 </div></div>
 
 <footer>Información en proceso de verificación. Mapa © OpenStreetMap contributors.<br>
-<a href="politica.html">Política de privacidad</a> · <a id="corr" href="#" style="display:none">Corregir o retirar mi negocio</a> · <a id="elink" href="?editar=1">Modo editor</a></footer>
+<a href="politica.html">Política de privacidad</a><span id="corrw" style="display:none"> · <a id="corr" href="#">Corregir o retirar mi negocio</a></span><span id="elinkw" style="display:none"> · <a id="elink" href="?editar=1">Modo editor</a></span></footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -736,7 +737,7 @@ function nearToggle(){
 }
 $("near").onclick=nearToggle;
 $("vfilter").onchange=()=>{vf=$("vfilter").value;lim=30;render()};
-if(CT.correo){const a=$("corr");a.href="mailto:"+encodeURIComponent(CT.correo)+"?subject="+encodeURIComponent("Corregir o retirar mi negocio")+"&body="+encodeURIComponent("Nombre del negocio:\nQuiero: corregir / retirar (borra lo que no aplique)\nDetalle:\n");a.style.display="inline"}
+if(CT.correo){const a=$("corr");a.href="mailto:"+encodeURIComponent(CT.correo)+"?subject="+encodeURIComponent("Corregir o retirar mi negocio")+"&body="+encodeURIComponent("Nombre del negocio:\nQuiero: corregir / retirar (borra lo que no aplique)\nDetalle:\n");$("corrw").style.display="inline"}
 
 
 // ---- Importar de OpenStreetMap (modo editor) ----
@@ -829,7 +830,7 @@ if(EDITOR){
 if(EDITOR){
   $("ebar").style.display="block";$("export").style.display="block";$("avcfg").style.display="block";
   $("vfilter").style.display="inline-block";$("vcount").style.display="inline-block";
-  $("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
+  $("elinkw").style.display="inline";$("elink").textContent="Salir del modo editor";$("elink").href=location.pathname;
   $("eadd").onclick=()=>newSlot();
   $("eexp").onclick=()=>$("export").scrollIntoView({behavior:"smooth"});
   $("fsave").onclick=saveForm;
